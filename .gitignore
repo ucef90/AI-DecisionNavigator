@@ -1,0 +1,78 @@
+# AI Decision Navigator — monorepo .gitignore.
+
+# -------------------------------------------------------------
+# Dependencies
+# -------------------------------------------------------------
+**/node_modules
+**/.pnp
+**/.pnp.*
+**/.yarn/*
+!**/.yarn/patches
+!**/.yarn/plugins
+!**/.yarn/releases
+!**/.yarn/versions
+
+# -------------------------------------------------------------
+# Build outputs
+# -------------------------------------------------------------
+**/.next/
+**/out/
+**/build/
+**/dist/
+**/coverage/
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+# -------------------------------------------------------------
+# Generated / runtime artefacts
+# -------------------------------------------------------------
+ai-framing-assistant/src/generated/prisma
+
+# Local SQLite databases (dev mode)
+**/*.db
+**/*.db-journal
+
+# -------------------------------------------------------------
+# Env files — never commit secrets.
+# .env.example is the documented template and IS committed (note the
+# explicit suffix exclusion below; gitignore exception patterns are
+# evaluated against the final pattern, not the combined wildcard).
+# -------------------------------------------------------------
+**/.env
+**/.env.local
+**/.env.development
+**/.env.development.local
+**/.env.production
+**/.env.production.local
+**/.env.test
+**/.env.test.local
+
+# -------------------------------------------------------------
+# Logs
+# -------------------------------------------------------------
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.pnpm-debug.log*
+
+# -------------------------------------------------------------
+# OS / editor / IDE
+# -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*.pem
+
+# -------------------------------------------------------------
+# Cloud / deployment platforms
+# -------------------------------------------------------------
+.vercel
+
+# -------------------------------------------------------------
+# Tooling (Claude Code session settings — user-specific)
+# -------------------------------------------------------------
+.claude/

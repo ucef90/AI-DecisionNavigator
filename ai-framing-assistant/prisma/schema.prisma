@@ -1,0 +1,240 @@
+// AI Project Framing Assistant — Prisma schema.
+//
+// SQLite for local dev (zero setup). The schema is kept portable so we can
+// switch to PostgreSQL via Docker (étape 12) by changing the provider only.
+//
+// Conventions for SQLite compatibility:
+//   - No native enums → enum-like fields are stored as TEXT with values
+//     constrained at the application layer (see src/types/index.ts).
+//   - No native arrays → list fields are stored as JSON strings.
+//   - Each domain table has a 1:1 relation with Project via projectId UNIQUE.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// -------------------------------------------------------------
+// Users & access
+// -------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  // Role: ADMIN | PROJECT_MANAGER | BUSINESS | IT | DATA | GOVERNANCE
+  role      String   @default("PROJECT_MANAGER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  managedProjects Project[] @relation("ProjectManager")
+}
+
+// -------------------------------------------------------------
+// Project (root entity)
+// -------------------------------------------------------------
+
+model Project {
+  id          String  @id @default(cuid())
+  name        String
+  direction   String?
+  sponsor     String?
+  description String?
+  // Status: DRAFT | IN_PROGRESS | SCORED | DECIDED | ARCHIVED
+  status      String  @default("DRAFT")
+  // Maturity: LOW | MEDIUM | HIGH
+  maturity    String?
+  // FinalDecision: GO_IA | POC_IA | AUTOMATION | STUDY | NO_GO
+  finalDecision String?
+  totalScore  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Free-text label displayed in lists; the relation below will be populated
+  // once auth lands and projects are linked to actual User accounts.
+  managerName String?
+  managerId   String?
+  manager     User?   @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
+
+  businessNeed           BusinessNeed?
+  dataAssessment         DataAssessment?
+  aiAnalysis             AIAnalysis?
+  architectureAssessment ArchitectureAssessment?
+  riskAssessment         RiskAssessment?
+  scoring                Scoring?
+  deliverables           Deliverable[]
+
+  @@index([status])
+  @@index([finalDecision])
+}
+
+// -------------------------------------------------------------
+// Étape 2-3 : Business need (reformulation + problème métier)
+// -------------------------------------------------------------
+
+model BusinessNeed {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  initialRequest   String?
+  reformulatedNeed String?
+  painPoints       String? // JSON: string[]
+  expectedValue    String?
+  usersImpacted    String?
+  currentKpis      String? // JSON: { name, value }[]
+  expectedOutcome  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Étape 5 : Data assessment
+// -------------------------------------------------------------
+
+model DataAssessment {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  dataSources     String? // JSON: string[]
+  dataTypes       String? // JSON: { structured: boolean, unstructured: boolean }
+  history         String?
+  quality         String?
+  availability    String?
+  silos           String?
+  personalData    Boolean @default(false)
+  sensitivity     String? // NONE | INTERNAL | CONFIDENTIAL | SENSITIVE
+  rgpdConstraints String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Étape 4 : AI analysis (IA ou pas IA)
+// -------------------------------------------------------------
+
+model AIAnalysis {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  automationRelevant Boolean @default(false)
+  ruleEngineRelevant Boolean @default(false)
+  mlRelevant         Boolean @default(false)
+  llmRelevant        Boolean @default(false)
+  ragRelevant        Boolean @default(false)
+  agentRelevant      Boolean @default(false)
+  hybridRelevant     Boolean @default(false)
+  classicRelevant    Boolean @default(false)
+
+  // RecommendedApproach: AUTOMATION | RULE | ML | LLM | RAG | AGENT | HYBRID | CLASSIC
+  recommendedApproach String?
+  justification       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Étape 6 : Architecture / workflow
+// -------------------------------------------------------------
+
+model ArchitectureAssessment {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  applications    String? // JSON: string[]
+  apis            String? // JSON: string[]
+  workflowCurrent String?
+  workflowTarget  String?
+  siIntegration   String?
+  humanValidation Boolean @default(true)
+  traceability    String?
+  existingTools   String? // JSON: string[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Étape 7 : Risk / governance
+// -------------------------------------------------------------
+
+model RiskAssessment {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Each risk axis is a 1..5 score (1 = négligeable, 5 = critique)
+  rgpdRisk           Int?
+  sensitiveDataRisk  Int?
+  hallucinationRisk  Int?
+  biasRisk           Int?
+  classificationRisk Int?
+  autoDecisionRisk   Int?
+  securityRisk       Int?
+  vendorLockRisk     Int?
+  adoptionRisk       Int?
+  supervisionRisk    Int?
+
+  // Overall: LOW | MEDIUM | HIGH | CRITICAL
+  overallRisk    String?
+  mitigationPlan String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Étape 8-9 : Scoring + decision
+// -------------------------------------------------------------
+
+model Scoring {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Six axes scored 1..3 (total = 18)
+  needClarity   Int
+  aiRelevance   Int
+  dataMaturity  Int
+  businessValue Int
+  riskControl   Int
+  feasibility   Int
+  total         Int
+
+  // Recommendation: GO_IA | POC_IA | AUTOMATION | STUDY | NO_GO
+  recommendation String
+  justification  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Étape 10 : Deliverables
+// -------------------------------------------------------------
+
+model Deliverable {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Type: FRAMING_NOTE | DECISION_SHEET | CARTOGRAPHY | DATA_ANALYSIS
+  //     | RISK_ANALYSIS | RECOMMENDATION | ACTION_PLAN
+  type    String
+  // Format: markdown | pdf | docx
+  format  String  @default("markdown")
+  content String
+  createdAt DateTime @default(now())
+
+  @@index([projectId, type])
+}

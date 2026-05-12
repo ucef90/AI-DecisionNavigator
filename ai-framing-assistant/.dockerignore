@@ -1,0 +1,51 @@
+# Build-context exclusions for Docker.
+#
+# Anything listed here is NOT sent to the daemon, which speeds up the
+# build and prevents leaking dev artefacts into the image.
+
+# Build outputs
+.next
+out
+build
+dist
+
+# Dependencies (the deps stage installs from package.json/package-lock.json)
+node_modules
+
+# Local dev DB and Prisma client (regenerated in the builder stage)
+prisma/dev.db
+prisma/dev.db-journal
+src/generated
+
+# Env files — never bake secrets into the image
+.env
+.env.local
+.env.*.local
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Git
+.git
+.gitignore
+
+# CI / docs we don't need in the image
+.github
+*.md
+!CLAUDE.md
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Test artefacts
+coverage

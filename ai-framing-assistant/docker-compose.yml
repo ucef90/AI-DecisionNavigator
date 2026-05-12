@@ -1,0 +1,72 @@
+# AI Decision Navigator — local / on-premise stack.
+#
+# Usage:
+#   docker compose up --build       # build + start
+#   docker compose up -d            # detached
+#   docker compose logs -f app      # follow logs
+#   docker compose down -v          # tear down + drop volume (resets DB)
+#
+# Seed the 3 demo SPEC projects on first boot by setting SEED_DEMO=true
+# in the `app` env (already enabled below for convenience). Disable it
+# once you have real data.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ain-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ain}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ain_local_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-ai_navigator}
+    volumes:
+      - ain-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ain} -d ${POSTGRES_DB:-ai_navigator}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    ports:
+      # Exposed on the host so you can connect with psql / DBeaver if needed.
+      # Remove this block in production behind a private network.
+      - "${DB_PORT:-5433}:5432"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ain-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-ain}:${POSTGRES_PASSWORD:-ain_local_dev_password}@db:5432/${POSTGRES_DB:-ai_navigator}
+      # Set to "true" on first boot to populate the 3 demo SPEC projects.
+      SEED_DEMO: ${SEED_DEMO:-true}
+      # LLM provider config — placeholders for the future provider abstraction.
+      # AI_PROVIDER: openai | azure | mistral | ollama
+      # AI_BASE_URL: http://ollama:11434/v1
+      # AI_MODEL: llama3.1
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+  # -----------------------------------------------------------
+  # Ollama — optional local LLM runtime, uncomment when the
+  # provider abstraction lands.
+  # -----------------------------------------------------------
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: ain-ollama
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ain-ollama:/root/.ollama
+  #   ports:
+  #     - "11434:11434"
+  #   # Pull a model on first boot:
+  #   # docker compose exec ollama ollama pull llama3.1
+
+volumes:
+  ain-pgdata:
+  # ain-ollama:

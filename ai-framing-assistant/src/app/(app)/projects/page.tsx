@@ -13,6 +13,8 @@ import {
   DecisionBadge,
   StatusBadge,
 } from "@/components/projects/status-badge";
+import { ProjectCardDeleteButton } from "@/components/projects/project-card-delete-button";
+import { deleteProject } from "@/lib/actions/projects";
 import { listProjects } from "@/lib/db/projects";
 
 export default async function ProjectsPage() {
@@ -48,31 +50,46 @@ export default async function ProjectsPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {projects.map((p) => (
-            <Link key={p.id} href={`/projects/${p.id}`} className="group">
-              <Card className="transition-colors group-hover:border-foreground/20">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-base">{p.name}</CardTitle>
-                    <StatusBadge status={p.status} />
-                  </div>
-                  {p.direction ? (
-                    <CardDescription>{p.direction}</CardDescription>
-                  ) : null}
-                </CardHeader>
-                <CardContent className="space-y-2 text-xs text-muted-foreground">
-                  {p.managerName ? <div>Chef de projet : {p.managerName}</div> : null}
-                  {p.sponsor ? <div>Sponsor : {p.sponsor}</div> : null}
-                </CardContent>
-                <CardFooter className="flex items-center justify-between">
-                  <DecisionBadge decision={p.finalDecision} />
-                  <span className="text-xs text-muted-foreground">
-                    {p.totalScore != null ? `${p.totalScore}/18` : "Non scoré"}
-                  </span>
-                </CardFooter>
-              </Card>
-            </Link>
-          ))}
+          {projects.map((p) => {
+            // Server action bindée au projectId via closure inline
+            async function handleDelete(formData: FormData) {
+              "use server";
+              await deleteProject(p.id, formData);
+            }
+            return (
+              <div key={p.id} className="group relative">
+                {/* Bouton supprimer overlay : visible au survol, mini-dialogue inline */}
+                <ProjectCardDeleteButton
+                  projectId={p.id}
+                  projectName={p.name}
+                  onConfirm={handleDelete}
+                />
+                <Link href={`/projects/${p.id}`} className="block">
+                  <Card className="transition-colors group-hover:border-foreground/20">
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2 pr-8">
+                        <CardTitle className="text-base">{p.name}</CardTitle>
+                        <StatusBadge status={p.status} />
+                      </div>
+                      {p.direction ? (
+                        <CardDescription>{p.direction}</CardDescription>
+                      ) : null}
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-xs text-muted-foreground">
+                      {p.managerName ? <div>Chef de projet : {p.managerName}</div> : null}
+                      {p.sponsor ? <div>Sponsor : {p.sponsor}</div> : null}
+                    </CardContent>
+                    <CardFooter className="flex items-center justify-between">
+                      <DecisionBadge decision={p.finalDecision} />
+                      <span className="text-xs text-muted-foreground">
+                        {p.totalScore != null ? `${p.totalScore}/18` : "Non scoré"}
+                      </span>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

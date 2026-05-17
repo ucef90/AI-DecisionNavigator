@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FileOutput, Map, Scale, Target } from "lucide-react";
+import { ArrowRight, BookOpenCheck, FileOutput, Map, Scale, Target } from "lucide-react";
+
+import { DeleteProjectButton } from "@/components/projects/delete-project-button";
+import { NextStepBanner } from "@/components/onboarding/next-step-banner";
+import { WelcomeTour } from "@/components/onboarding/welcome-tour";
+import { deleteProject } from "@/lib/actions/projects";
+import { computeNextStep } from "@/lib/engines/next-step";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -57,6 +63,9 @@ export default async function ProjectDetailPage(
     where: { projectId: snapshot.id },
   });
 
+  // Smart "next step" detection (engine that scans all 7 ateliers' gates)
+  const nextStep = await computeNextStep(snapshot.id);
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-start justify-between gap-4">
@@ -77,9 +86,127 @@ export default async function ProjectDetailPage(
             </p>
           ) : null}
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <StatusBadge status={(await getStatus(id)) ?? "DRAFT"} />
           <DecisionBadge decision={await getFinalDecision(id)} />
+          <WelcomeTour projectId={snapshot.id} projectName={snapshot.name} />
+        </div>
+      </div>
+
+      {/* Bannière "prochaine étape" — guide l'utilisateur où aller */}
+      <NextStepBanner step={nextStep} />
+
+      <div className="rounded-xl border border-foreground/15 bg-gradient-to-br from-muted/40 to-background p-5 shadow-sm">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <BookOpenCheck className="h-3.5 w-3.5" />
+          Mode atelier consultant — 7 étapes
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <Link
+            href={`/projects/${snapshot.id}/atelier/1`}
+            className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 transition hover:border-foreground/40"
+          >
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Atelier 1 sur 7
+              </div>
+              <div className="text-sm font-semibold">Comprendre le vrai problème métier</div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Cartographie, irritants, gate.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+          </Link>
+          <Link
+            href={`/projects/${snapshot.id}/atelier/2`}
+            className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 transition hover:border-foreground/40"
+          >
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Atelier 2 sur 7
+              </div>
+              <div className="text-sm font-semibold">IA ou automatisation ?</div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Matrice, profil pressenti, archi cible.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+          </Link>
+          <Link
+            href={`/projects/${snapshot.id}/atelier/3`}
+            className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 transition hover:border-foreground/40"
+          >
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Atelier 3 sur 7
+              </div>
+              <div className="text-sm font-semibold">Questionnaire de cadrage IA</div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Consolidation, maturité dérivée, points critiques.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+          </Link>
+          <Link
+            href={`/projects/${snapshot.id}/atelier/4`}
+            className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 transition hover:border-foreground/40"
+          >
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Atelier 4 sur 7
+              </div>
+              <div className="text-sm font-semibold">Scoring et maturité projet IA</div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                11 axes auto, radar, décision recommandée.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+          </Link>
+          <Link
+            href={`/projects/${snapshot.id}/atelier/5`}
+            className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 transition hover:border-foreground/40"
+          >
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Atelier 5 sur 7
+              </div>
+              <div className="text-sm font-semibold">Cartographie IA complète</div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                6 couches consolidées, annotations, archi cible.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+          </Link>
+          <Link
+            href={`/projects/${snapshot.id}/atelier/6`}
+            className="group flex items-center justify-between gap-3 rounded-lg border border-border bg-background px-4 py-3 transition hover:border-foreground/40"
+          >
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Atelier 6 sur 7
+              </div>
+              <div className="text-sm font-semibold">Gouvernance, risques et conformité IA</div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Cockpit RACI, heatmap, conformité, monitoring.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+          </Link>
+          <Link
+            href={`/projects/${snapshot.id}/atelier/7`}
+            className="group flex items-center justify-between gap-3 rounded-lg border border-foreground/40 bg-gradient-to-br from-violet-50/40 to-background px-4 py-3 transition hover:border-foreground dark:from-violet-950/30"
+          >
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Atelier 7 sur 7 — Décision finale
+              </div>
+              <div className="text-sm font-semibold">Architecture cible, roadmap & décision finale IA</div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Cockpit exécutif, Gantt, dossier exportable.
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+          </Link>
         </div>
       </div>
 
@@ -199,6 +326,23 @@ export default async function ProjectDetailPage(
           {questionnaireFilled ? "Reprendre le cadrage" : "Continuer le cadrage"} →
         </Link>
       </div>
+
+      {/* Zone de danger */}
+      <details className="mt-6 rounded-lg border border-border bg-muted/20 p-3">
+        <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Zone de danger
+        </summary>
+        <div className="mt-3">
+          <DeleteProjectButton
+            projectId={snapshot.id}
+            projectName={snapshot.name}
+            onConfirm={async (formData) => {
+              "use server";
+              await deleteProject(snapshot.id, formData);
+            }}
+          />
+        </div>
+      </details>
     </div>
   );
 }

@@ -73,3 +73,24 @@ export async function createProject(
   revalidatePath("/dashboard");
   redirect(`/projects/${project.id}`);
 }
+
+/**
+ * Supprime un projet et toutes ses données associées.
+ * Grâce aux `onDelete: Cascade` du schéma Prisma, tous les enfants
+ * (ateliers 1-7, scoring, livrables, cartographie…) sont supprimés
+ * en cascade — pas besoin de cleanup manuel.
+ *
+ * Demande une confirmation côté client : on attend `confirm=DELETE`
+ * dans le FormData pour éviter un clic accidentel.
+ */
+export async function deleteProject(projectId: string, form: FormData): Promise<void> {
+  const confirm = typeof form.get("confirm") === "string" ? String(form.get("confirm")) : "";
+  if (confirm !== "DELETE") {
+    // Sécurité : on ne supprime pas sans confirmation explicite.
+    return;
+  }
+  await prisma.project.delete({ where: { id: projectId } });
+  revalidatePath("/projects");
+  revalidatePath("/dashboard");
+  redirect("/projects");
+}

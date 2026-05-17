@@ -68,6 +68,72 @@ model Project {
   scoring                Scoring?
   deliverables           Deliverable[]
 
+  // Atelier 1 — Comprendre le vrai problème métier
+  businessQualification    BusinessQualification?
+  projectScope             ProjectScope?
+  workshopReport           WorkshopReport?
+  atelier1Gate             Atelier1Gate?
+  businessActors           BusinessActor[]
+  processSteps             ProcessStep[]
+  irritants                Irritant[]
+  businessImpacts          BusinessImpact[]
+  businessObjectives       BusinessObjective[]
+  kpiBaselines             KpiBaseline[]
+  projectAssumptions       ProjectAssumption[]
+  uncertainties            Uncertainty[]
+  businessConstraints      BusinessConstraint[]
+  improvementOpportunities ImprovementOpportunity[]
+  userVerbatims            UserVerbatim[]
+
+  // Atelier 2 — IA ou automatisation ?
+  complexityAssessment   ComplexityAssessment?
+  atelier2Synthesis      Atelier2Synthesis?
+  atelier2Gate           Atelier2Gate?
+  taskQualifications     TaskQualification[]
+  intelligenceNeeds      IntelligenceNeed[]
+  technologyCandidates   TechnologyCandidate[]
+  humanValidationPoints  HumanValidationPoint[]
+  processExceptions      ProcessException[]
+  technicalDependencies  TechnicalDependency[]
+  techRecommendations    TechRecommendation[]
+  targetArchitectureNodes TargetArchitectureNode[]
+  targetArchitectureEdges TargetArchitectureEdge[]
+
+  // Atelier 3 — Questionnaire de cadrage IA
+  documentAnalysis       DocumentAnalysis?
+  regulatoryAnalysis     RegulatoryAnalysis?
+  maturityAssessment     MaturityAssessment?
+  feasibilityAssessment  FeasibilityAssessment?
+  atelier3Synthesis      Atelier3Synthesis?
+  atelier3Gate           Atelier3Gate?
+
+  // Atelier 4 — Scoring et maturité projet IA
+  projectScorecard    ProjectScorecard?
+  priorityAssessment  PriorityAssessment?
+  atelier4Synthesis   Atelier4Synthesis?
+  atelier4Gate        Atelier4Gate?
+
+  // Atelier 5 — Cartographie IA complète
+  cartographyAnnotations CartographyAnnotation[]
+  atelier5Synthesis      Atelier5Synthesis?
+  atelier5Gate           Atelier5Gate?
+
+  // Atelier 6 — Gouvernance, risques et conformité IA
+  governanceRoles      GovernanceRole[]
+  securityControls     SecurityControl[]
+  complianceItems      ComplianceItem[]
+  monitoringKpis       MonitoringKpi[]
+  incidentProcedures   IncidentProcedure[]
+  atelier6Synthesis    Atelier6Synthesis?
+  atelier6Gate         Atelier6Gate?
+
+  // Atelier 7 — Architecture cible, roadmap et décision finale IA
+  strategicVision        StrategicVision?
+  roadmapItems           RoadmapItem[]
+  industrializationSteps IndustrializationStep[]
+  atelier7Synthesis      Atelier7Synthesis?
+  atelier7Gate           Atelier7Gate?
+
   @@index([status])
   @@index([finalDecision])
 }
@@ -83,11 +149,22 @@ model BusinessNeed {
 
   initialRequest   String?
   reformulatedNeed String?
-  painPoints       String? // JSON: string[]
+  painPoints       String? // JSON: string[] (legacy — see Irritant)
   expectedValue    String?
   usersImpacted    String?
-  currentKpis      String? // JSON: { name, value }[]
+  currentKpis      String? // JSON: { name, value }[] (legacy — see KpiBaseline)
   expectedOutcome  String?
+
+  // Atelier 1 — synthèse (§11) générée puis éditée
+  problemStatement     String?
+  currentImpactSummary String?
+  expectedResultSummary String?
+  // Maturité auto-évaluée par le CDP avant le gate (§18)
+  declaredMaturityLevel String? // LOW | MEDIUM | HIGH
+
+  // Détection de la formulation "solution imposée" (§2)
+  solutionBiasDetected  Boolean @default(false)
+  solutionBiasNotes     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -230,6 +307,7 @@ model Deliverable {
 
   // Type: FRAMING_NOTE | DECISION_SHEET | CARTOGRAPHY | DATA_ANALYSIS
   //     | RISK_ANALYSIS | RECOMMENDATION | ACTION_PLAN
+  //     | ATELIER1_DOSSIER (dossier d'analyse métier initiale — 18 sections)
   type    String
   // Format: markdown | pdf | docx
   format  String  @default("markdown")
@@ -237,4 +315,1332 @@ model Deliverable {
   createdAt DateTime @default(now())
 
   @@index([projectId, type])
+}
+
+// =============================================================
+// ATELIER 1 — Comprendre le vrai problème métier
+// =============================================================
+// Reference: atelier_1_socle_reutilisable_analyse_metier_ia.md
+// 18 sections livrable, présentées en 5 phases UX (A → E).
+// Le but : éviter le formulaire fourre-tout en typant chaque
+// concept (acteur, irritant, hypothèse, contrainte…) pour
+// permettre la cartographie dynamique et le moteur de signaux.
+
+// -------------------------------------------------------------
+// §1 — Fiche de qualification métier
+// -------------------------------------------------------------
+model BusinessQualification {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Contexte général
+  directionConcerned   String? // direction métier
+  businessOwner        String? // responsable métier
+  workshopDate         DateTime?
+  workshopParticipants String?  // JSON: { name, role }[]
+
+  // Contexte projet — pourquoi maintenant ?
+  triggerEvent              String?  // l'événement déclencheur
+  priorityReason            String?  // pourquoi prioritaire ?
+  regulatoryPressure        Boolean  @default(false)
+  operationalOverload       Boolean  @default(false)
+  serviceDegradation        Boolean  @default(false)
+  strategicAlignment        String?  // objectifs stratégiques liés
+  // Aides analyse — drivers cochables
+  driverVolumeIncrease      Boolean  @default(false)
+  driverResourceShortage    Boolean  @default(false)
+  driverFrequentErrors      Boolean  @default(false)
+  driverPoorUserExperience  Boolean  @default(false)
+  driverManualWorkflow      Boolean  @default(false)
+  driverLowTraceability     Boolean  @default(false)
+  driverHighDelays          Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// AJOUT — Périmètre / hors-scope
+// (correction proposée à la méthodologie : sans périmètre,
+// scope creep garanti à l'atelier 2)
+// -------------------------------------------------------------
+model ProjectScope {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  inScope     String? // JSON: string[]
+  outOfScope  String? // JSON: string[]
+  assumptionsForScope String? // hypothèses qui conditionnent ce périmètre
+  scopeValidatedBy   String?  // ex. "Sponsor — Mme X le 17/05/2026"
+  scopeValidatedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// §6 — Acteurs et utilisateurs (typés)
+// -------------------------------------------------------------
+model BusinessActor {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name        String   // "Agent de traitement", "Usager", "Manager"
+  // Category: USER (usager final) | AGENT (opérationnel) | MANAGER
+  //         | SPONSOR | IT | DATA | GOVERNANCE | EXTERNAL
+  category    String
+  role        String?  // description courte du rôle
+  volume      Int?     // nombre d'instances (ex. 50 agents)
+  // Implication: PRIMARY | SECONDARY | CONSULTED | INFORMED
+  involvement String?
+  currentPain String?  // irritant principal vu par cet acteur
+  expectedGain String? // gain attendu pour cet acteur
+  position    Int?     // pour ordering manuel
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §13 — Cartographie du processus AS-IS (étapes ordonnées)
+// -------------------------------------------------------------
+model ProcessStep {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  order       Int     // 1, 2, 3...
+  name        String  // "Lecture email", "Classification"
+  actor       String? // qui fait l'action
+  tools       String? // JSON: string[]
+  // Mode: MANUAL | SEMI_AUTOMATED | AUTOMATED
+  mode        String  @default("MANUAL")
+  // StepType: INPUT | TREATMENT | VALIDATION | DECISION | OUTPUT | TRANSFER
+  stepType    String  @default("TREATMENT")
+  durationMin Int?    // durée moyenne en minutes
+  notes       String?
+  // Cible (TO-BE esquissé) — optionnel
+  targetMode  String? // MANUAL | SEMI_AUTOMATED | AUTOMATED
+  targetNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, order])
+}
+
+// -------------------------------------------------------------
+// §4 + §15 — Irritants / points de friction (fusionnés)
+// (correction proposée : §4 et §15 étaient redondants dans la
+// méthodologie originale)
+// -------------------------------------------------------------
+model Irritant {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  // Category: MANUAL_READ | MANUAL_INPUT | DOUBLE_ENTRY | DOC_SEARCH
+  //         | CLASSIFICATION_ERROR | TOOL_GAP | LACK_OF_VISIBILITY
+  //         | LACK_OF_PRIORITY | WORKFLOW_BREAK | DELAY | OTHER
+  category    String  @default("OTHER")
+  // ImpactedActor — string FK soft, par convention le nom de l'acteur
+  impactedActor String?
+  // Severity: LOW | MEDIUM | HIGH | BLOCKING
+  severity    String  @default("MEDIUM")
+  frequency   String? // ex. "Quotidien", "10/jour"
+  // Lien optionnel vers une étape de process
+  processStepId String?
+  // Quantification (correction : baseline mesurée)
+  estimatedTimeWastedMinPerDay Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §5 — Impacts opérationnels (typés par axe)
+// -------------------------------------------------------------
+model BusinessImpact {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Axis: AGENT | USER | ORGANIZATION | FINANCIAL | REGULATORY
+  //     | QUALITY | DELAY | COST | SATISFACTION
+  axis        String
+  description String
+  // Severity: LOW | MEDIUM | HIGH | CRITICAL
+  severity    String  @default("MEDIUM")
+  // Direction: NEGATIVE (impact actuel négatif) | POSITIVE (impact futur attendu)
+  direction   String  @default("NEGATIVE")
+  metric      String? // valeur quantifiée ex. "+30% temps", "2 plaintes/mois"
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId, axis])
+}
+
+// -------------------------------------------------------------
+// §7 — Objectifs métier (structurés + priorisés)
+// -------------------------------------------------------------
+model BusinessObjective {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  priority    Int    @default(3) // 1 (haute) .. 5 (basse)
+  // Category: TIME | QUALITY | COST | EXPERIENCE | COMPLIANCE
+  //         | AUTOMATION | PILOTAGE | OTHER
+  category    String @default("OTHER")
+  targetKpiId String? // lien optionnel vers KpiBaseline (id)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §8 — KPI métier avec BASELINE mesurée
+// (correction : sans valeur actuelle, pas de mesure de gain
+// possible)
+// -------------------------------------------------------------
+model KpiBaseline {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name          String   // "Temps moyen traitement email"
+  unit          String?  // "min", "%", "j", "€"
+  currentValue  String?  // valeur actuelle mesurée
+  targetValue   String?  // valeur cible
+  source        String?  // d'où vient la mesure
+  // Status: NOT_MEASURED | ESTIMATED | MEASURED
+  measureStatus String   @default("NOT_MEASURED")
+  notes         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §9 — Hypothèses projet (à challenger)
+// -------------------------------------------------------------
+model ProjectAssumption {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  statement       String  // l'hypothèse
+  // Type: BUSINESS | DATA | TECHNICAL | ORGANIZATIONAL | REGULATORY
+  assumptionType  String  @default("BUSINESS")
+  // RiskLevel si l'hypothèse est fausse : LOW | MEDIUM | HIGH | CRITICAL
+  riskIfWrong     String  @default("MEDIUM")
+  validationPlan  String? // comment vérifier
+  // Status: UNVERIFIED | IN_PROGRESS | VALIDATED | INVALIDATED
+  status          String  @default("UNVERIFIED")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §10 — Zones floues et incertitudes
+// -------------------------------------------------------------
+model Uncertainty {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  topic       String  // "Volumétrie réelle", "Disponibilité API GED"
+  question    String  // formulation de l'incertitude
+  // Severity: LOW | MEDIUM | HIGH (impact sur la décision)
+  severity    String  @default("MEDIUM")
+  ownerToAsk  String? // qui peut répondre (acteur/service)
+  dueBy       DateTime?
+  // Status: OPEN | INVESTIGATING | RESOLVED
+  status      String  @default("OPEN")
+  resolution  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §14 — Contraintes métier
+// -------------------------------------------------------------
+model BusinessConstraint {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Type: REGULATORY | BUDGET | TIMELINE | SECURITY | ORGANIZATIONAL
+  //     | TECHNICAL | RESOURCES | OTHER
+  constraintType String
+  description    String
+  // Impact: LOW | MEDIUM | HIGH | BLOCKING
+  impactLevel    String  @default("MEDIUM")
+  source         String? // origine (RGPD, sponsor, DSI...)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §16 — Opportunités d'amélioration
+// -------------------------------------------------------------
+model ImprovementOpportunity {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title         String
+  description   String?
+  // Category: EFFICIENCY | QUALITY | COST | RISK_REDUCTION
+  //         | EXPERIENCE | AUTOMATION | DATA | OTHER
+  category      String   @default("OTHER")
+  estimatedGain String?  // ex. "30% temps", "5j/mois"
+  // Effort: LOW | MEDIUM | HIGH
+  effort        String   @default("MEDIUM")
+  // Lien optionnel vers une étape de process ou un irritant
+  relatedIrritantId String?
+  relatedStepId     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// AJOUT — Voice of the user (verbatim)
+// (correction : citations brutes pour crédibiliser l'analyse
+// en COPIL)
+// -------------------------------------------------------------
+model UserVerbatim {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  quote       String
+  speakerRole String? // "Agent traitement", "Usager", "Manager"
+  speakerName String? // optionnel
+  collectedAt DateTime?
+  // Source: INTERVIEW | SHADOWING | SURVEY | COMPLAINT | OTHER
+  source      String  @default("INTERVIEW")
+  // Sentiment: NEGATIVE | NEUTRAL | POSITIVE
+  sentiment   String  @default("NEGATIVE")
+  // Tag libre pour regrouper par thème
+  theme       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §17 — Compte rendu d'atelier
+// -------------------------------------------------------------
+model WorkshopReport {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  workshopDate    DateTime?
+  participants    String? // JSON: { name, role }[]
+  objectives      String? // objectifs atelier
+  topicsCovered   String? // JSON: string[]
+  keyFindings     String? // points importants
+  identifiedRisks String? // risques détectés
+  decisionsMade   String? // décisions prises
+  actionsToTake   String? // JSON: { action, owner, due }[]
+  openTopics      String? // zones à approfondir
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// AJOUT — Gate de sortie atelier 1
+// (correction : sans gate explicite, on passe à l'atelier 2
+// avec un cadrage incomplet)
+// -------------------------------------------------------------
+model Atelier1Gate {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // 5 critères go/no-go atelier 2
+  reformulatedWithoutTech Boolean @default(false)
+  atLeastThreeIrritants   Boolean @default(false)
+  workflowAsIsMapped      Boolean @default(false)
+  baselineKpiMeasured     Boolean @default(false)
+  scopeValidatedBySponsor Boolean @default(false)
+
+  // Verdict: NOT_READY | READY | OVERRIDE (passage forcé par le CDP)
+  verdict       String   @default("NOT_READY")
+  overrideNotes String?  // si OVERRIDE : justification
+  decidedAt     DateTime?
+  decidedBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================================
+// ATELIER 2 — IA ou automatisation ?
+// =============================================================
+// Reference: atelier_2_socle_reutilisable_ia_ou_automatisation.md
+// 16 sections livrable, présentées en 5 phases UX.
+// L'atelier 2 réutilise massivement les données de l'atelier 1
+// (ProcessStep, BusinessActor, BusinessConstraint…). Les modèles
+// ci-dessous ajoutent uniquement ce qui est SPÉCIFIQUE à la
+// qualification IA vs automatisation.
+
+// -------------------------------------------------------------
+// §2 + §6 — Qualification IA vs auto pour chaque tâche/étape
+// Lien soft vers ProcessStep (atelier 1) via processStepId.
+// -------------------------------------------------------------
+model TaskQualification {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Si la tâche est rattachée à une étape de workflow de l'atelier 1,
+  // on garde le lien (soft FK) pour synchroniser la cartographie.
+  processStepId String?
+  taskName      String
+
+  // Nature de la tâche
+  // Nature: RECEIVE | READ | CLASSIFY | EXTRACT | SEARCH | DECIDE
+  //       | GENERATE | VALIDATE | TRANSFER | ARCHIVE | NOTIFY | OTHER
+  nature        String   @default("OTHER")
+
+  // Verdict de l'analyste
+  // Verdict: AUTOMATION (auto classique) | AI (IA) | HUMAN (humain only)
+  //        | HYBRID (mix auto + IA + humain)
+  verdict       String   @default("HUMAN")
+
+  // Niveau de complexité 1..5
+  complexity    Int      @default(3)
+
+  // Caractéristiques (cochables) qui justifient le verdict
+  rulesKnownAndFixed      Boolean @default(false)
+  workflowStable          Boolean @default(false)
+  fewExceptions           Boolean @default(false)
+  needsTextUnderstanding  Boolean @default(false)
+  needsClassification     Boolean @default(false)
+  needsContentGeneration  Boolean @default(false)
+  needsDocumentReading    Boolean @default(false)
+  needsDocSearch          Boolean @default(false)
+  needsContextualReasoning Boolean @default(false)
+  needsHumanInterpretation Boolean @default(false)
+
+  // Technologies candidates (JSON: string[] de codes : OCR, NLP, ML, LLM, RAG, BPM, RPA, API, AGENT)
+  techCandidates String?
+
+  justification String?
+  position      Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §5 — Niveaux de complexité (4 axes)
+// -------------------------------------------------------------
+model ComplexityAssessment {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Chaque axe noté 1..5
+  workflowComplexity     Int?
+  documentComplexity     Int?
+  decisionComplexity     Int?
+  governanceComplexity   Int?
+
+  workflowJustification    String?
+  documentJustification    String?
+  decisionJustification    String?
+  governanceJustification  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// §7 — Besoins d'intelligence identifiés
+// -------------------------------------------------------------
+model IntelligenceNeed {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Type: TEXT_UNDERSTANDING | CLASSIFICATION | DOC_SEARCH | CONTENT_GENERATION
+  //     | REASONING | INTERPRETATION | PREDICTION | EXTRACTION
+  intelligenceType String
+  // Necessity: REQUIRED | OPTIONAL | NOT_NEEDED
+  necessity        String  @default("REQUIRED")
+  justification    String?
+  // Techno candidates (JSON: string[]) : NLP, LLM, ML, RAG, OCR, AGENT, etc.
+  suggestedTech    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §9 — Technologies candidates retenues
+// -------------------------------------------------------------
+model TechnologyCandidate {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Tech: OCR | NLP | ML | LLM | RAG | BPM | RPA | API | AGENT | RULE_ENGINE | OTHER
+  tech            String
+  purpose         String   // à quoi sert cette techno dans ce projet
+  // Maturity: MATURE | EMERGING | EXPERIMENTAL
+  maturity        String   @default("MATURE")
+  // FitScore 1..5 (alignment with the project's needs)
+  fitScore        Int      @default(3)
+  notes           String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §10 — Points de validation humaine obligatoire
+// -------------------------------------------------------------
+model HumanValidationPoint {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Sur quel point intervient la validation
+  taskName         String
+  reason           String  // pourquoi la validation est obligatoire
+  // ReasonType: REGULATORY | SENSITIVE_DATA | HIGH_IMPACT | AMBIGUOUS_CASE
+  //           | LEGAL_DECISION | OTHER
+  reasonType       String  @default("OTHER")
+  validatorRole    String? // qui valide (rôle)
+  // BlockingOrAdvisory: BLOCKING | ADVISORY
+  validationMode   String  @default("BLOCKING")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §11 — Exceptions (cas non standards)
+// -------------------------------------------------------------
+model ProcessException {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  scenario          String   // description du cas
+  frequency         String?  // ex. "5%", "rare", "1/mois"
+  // Handling: AI | AUTOMATION | HUMAN | NEEDS_DESIGN
+  handlingProposal  String   @default("HUMAN")
+  riskIfMishandled  String   @default("MEDIUM") // LOW | MEDIUM | HIGH | CRITICAL
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §12 — Dépendances techniques (SI, APIs, données)
+// -------------------------------------------------------------
+model TechnicalDependency {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // DependencyType: SI_APP | API | DATA_SOURCE | DOCUMENT_BASE | TEAM | OTHER
+  dependencyType String
+  name           String   // "Outlook", "GED", "CRM", "Référentiel clients"
+  // Status: AVAILABLE | TO_BUILD | TO_NEGOTIATE | UNKNOWN
+  status         String   @default("UNKNOWN")
+  blocking       Boolean  @default(false)
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §14 — Recommandations technologiques (consolidées)
+// -------------------------------------------------------------
+model TechRecommendation {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Layer: ORCHESTRATION | INGESTION | INTELLIGENCE | UI | GOVERNANCE | STORAGE
+  layer           String
+  recommendation  String   // ex. "Mettre en place un BPM avec validation humaine intégrée"
+  technologies    String?  // JSON: string[] (codes tech)
+  rationale       String?
+  // Priority: CORE | RECOMMENDED | OPTIONAL
+  priority        String   @default("RECOMMENDED")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+// -------------------------------------------------------------
+// §15 — Première architecture logique cible (noeuds + arêtes)
+// -------------------------------------------------------------
+model TargetArchitectureNode {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // NodeType: INPUT | PROCESS | AI_COMPONENT | AUTO_COMPONENT
+  //         | HUMAN_VALIDATION | DATA_STORE | OUTPUT
+  nodeType     String
+  label        String   // ex. "Email entrant", "Classification ML", "Validation manager"
+  // TechCode optionnel (LLM, RAG, OCR, BPM, etc.)
+  techCode     String?
+  // Position pour le rendu (graph layout simple)
+  posX         Int      @default(0)
+  posY         Int      @default(0)
+  notes        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  outgoing TargetArchitectureEdge[] @relation("EdgeFrom")
+  incoming TargetArchitectureEdge[] @relation("EdgeTo")
+
+  @@index([projectId])
+}
+
+model TargetArchitectureEdge {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  fromId    String
+  toId      String
+  from      TargetArchitectureNode @relation("EdgeFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to        TargetArchitectureNode @relation("EdgeTo",   fields: [toId],   references: [id], onDelete: Cascade)
+
+  label     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@index([fromId])
+  @@index([toId])
+}
+
+// -------------------------------------------------------------
+// §16 — Synthèse finale atelier 2
+// -------------------------------------------------------------
+model Atelier2Synthesis {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  realNeed                 String?  // re-rappel du besoin réel
+  complexityLevel          String?  // LOW | MEDIUM | HIGH | VERY_HIGH
+  intelligenceSummary      String?  // synthèse des besoins d'intelligence
+  governanceLevel          String?  // LOW | MEDIUM | HIGH | CRITICAL
+  // Profile: AUTOMATION_ONLY | AI_HYBRID | AI_CENTRIC | HUMAN_FIRST | NOT_QUALIFIED
+  recommendedProfile       String?
+  recommendedArchitecture  String?  // description textuelle de l'archi cible
+  finalRecommendation      String?  // synthèse à présenter au COPIL
+  openPoints               String?  // ce qui reste à approfondir (cadrage atelier 3+)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Gate atelier 3 — critères go/no-go pour passer à
+// "Questionnaire de cadrage IA" (atelier 3).
+// -------------------------------------------------------------
+model Atelier2Gate {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  taskMatrixComplete       Boolean @default(false)  // chaque tâche-clé qualifiée
+  intelligenceNeedsScored  Boolean @default(false)  // besoins d'intelligence évalués
+  techCandidatesIdentified Boolean @default(false)
+  humanValidationsMapped   Boolean @default(false)
+  targetArchSketched       Boolean @default(false)
+  synthesisWritten         Boolean @default(false)
+
+  verdict       String   @default("NOT_READY") // NOT_READY | READY | OVERRIDE
+  overrideNotes String?
+  decidedAt     DateTime?
+  decidedBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================================
+// ATELIER 3 — Questionnaire de cadrage IA
+// =============================================================
+// Reference: atelier_3_socle_reutilisable_questionnaire_cadrage_ia.md
+// 21 sections livrable, 5 phases UX.
+// L'atelier 3 est UN MOTEUR DE CONSOLIDATION + DÉTECTION qui
+// s'appuie massivement sur les données de l'atelier 1 et 2.
+// 6 modèles spécifiques uniquement (les compléments réels) ;
+// le reste = vues consolidées + derived data.
+
+// -------------------------------------------------------------
+// §6 — Analyse documentaire (spécifique, pas dans atelier 1/2)
+// -------------------------------------------------------------
+model DocumentAnalysis {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  documentsExist        Boolean @default(false)
+  // Formats: JSON: string[] ex. ["PDF", "DOCX", "JPG", "Email"]
+  formats               String?
+  // Structure: STRUCTURED | SEMI_STRUCTURED | UNSTRUCTURED | MIXED
+  structureLevel        String?
+  // Exploitability: EASY | MODERATE | DIFFICULT | UNUSABLE
+  exploitability        String?
+  interpretationNeeded  Boolean @default(false)
+  estimatedVolume       String? // ex. "5K docs/mois"
+  ocrNeeded             Boolean @default(false)
+  nlpNeeded             Boolean @default(false)
+  ragNeeded             Boolean @default(false)
+  // ComplexityLevel: LOW | MEDIUM | HIGH | VERY_HIGH
+  complexityLevel       String?
+  notes                 String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// §11 — Analyse réglementaire (spécifique conformité IA)
+// -------------------------------------------------------------
+model RegulatoryAnalysis {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  rgpdApplicable         Boolean @default(true)
+  sensitiveDataConcerned Boolean @default(false)
+  // LegalObligations: JSON: string[]
+  legalObligations       String?
+  auditRequired          Boolean @default(false)
+  dpoConsulted           Boolean @default(false)
+  cnilConsultation       Boolean @default(false)
+  // EuAiActTier: NONE | MINIMAL | LIMITED | HIGH | UNACCEPTABLE
+  euAiActTier            String  @default("NONE")
+  euAiActJustification   String?
+  notes                  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// §14 — Auto-évaluation maturité projet par axe
+// -------------------------------------------------------------
+model MaturityAssessment {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // 6 axes notés 1..5 par le CDP (peut être confronté à
+  // la maturité DÉRIVÉE par l'engine pour révéler les écarts).
+  needClarity          Int?
+  workflowKnowledge    Int?
+  dataMaturity         Int?
+  governanceMaturity   Int?
+  stakeholderAlignment Int?
+  realismLevel         Int?
+
+  selfAssessmentNotes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// §15 — Faisabilité globale projet
+// -------------------------------------------------------------
+model FeasibilityAssessment {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // 5 axes notés 1..5
+  technicallyFeasible       Int?
+  organizationallyFeasible  Int?
+  regulatorilyFeasible      Int?
+  resourcesAvailable        Int?
+  dataAvailable             Int?
+
+  // Overall: LOW | MEDIUM | HIGH
+  overallFeasibility String?
+  // Blocking factors et enablers (JSON: string[])
+  blockingFactors    String?
+  enablers           String?
+  notes              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// §21 — Synthèse finale atelier 3
+// -------------------------------------------------------------
+model Atelier3Synthesis {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  realNeed              String?
+  maturityLevel         String? // LOW | MEDIUM | HIGH
+  complexityLevel       String? // LOW | MEDIUM | HIGH | VERY_HIGH
+  // MainRisks / MainConstraints — JSON: string[]
+  mainRisks             String?
+  mainConstraints       String?
+  feasibilityGlobal     String? // LOW | MEDIUM | HIGH
+  governanceLevel       String? // LOW | MEDIUM | HIGH | CRITICAL
+  finalRecommendation   String?
+
+  // Préparation pour scoring (atelier 4) et cartographie (atelier 5)
+  scoringPreparationNotes     String?
+  cartographyPreparationNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================================
+// ATELIER 4 — Scoring et maturité projet IA
+// =============================================================
+// Reference: atelier_4 spec
+// Le scoring est calculé AUTO depuis les données collectées
+// (ateliers 1-3) mais reste éditable par le CDP avec
+// justification. 11 axes sur 1-5.
+
+// -------------------------------------------------------------
+// Scorecard projet — 11 axes, total /55, niveau qualitatif
+// -------------------------------------------------------------
+model ProjectScorecard {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // 11 axes, chacun 1..5 (null = non encore évalué)
+  businessMaturity          Int?  // §1 maturité métier
+  dataQuality               Int?  // §2 qualité données
+  workflowMaturity          Int?  // §3 workflow
+  governanceMaturity        Int?  // §4 gouvernance
+  riskControl               Int?  // §5 risques (5 = bien maîtrisés)
+  complexityScore           Int?  // §6 complexité (5 = simple)
+  technicalFeasibility      Int?  // §7 faisabilité technique
+  organizationalFeasibility Int?  // §8 faisabilité orga
+  regulatoryReadiness       Int?  // §9 réglementaire
+  siIndependence            Int?  // §10 dépendances SI (5 = peu/indépendant)
+  aiReadiness               Int?  // §11 préparation IA
+
+  // Pour chaque axe : auto-calculé ou override manuel ?
+  // JSON: { axisName: boolean }
+  autoFlags                 String?
+  // Justifications par axe — JSON: { axisName: string }
+  justifications            String?
+
+  // Score global agrégé sur 100 (somme / 55 * 100)
+  overallScore              Int?
+  // OverallLevel: CRITICAL | LOW | MEDIUM | HIGH | EXCELLENT
+  overallLevel              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Priorité projet (utile pour comparaison multi-projets ensuite)
+// -------------------------------------------------------------
+model PriorityAssessment {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Level: STRATEGIC | HIGH | MEDIUM | LOW | DEPRIORITIZED
+  level         String?
+  justification String?
+  notes         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Synthèse scoring atelier 4
+// -------------------------------------------------------------
+model Atelier4Synthesis {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  globalMaturity      String?  // CRITICAL | LOW | MEDIUM | HIGH | EXCELLENT
+  globalFeasibility   String?  // LOW | MEDIUM | HIGH
+  globalRisk          String?  // LOW | MEDIUM | HIGH | CRITICAL
+  // RecommendedDecision: GO_IA | POC_IA | AUTOMATION | STUDY | NO_GO
+  recommendedDecision String?
+  decisionRationale   String?
+  // JSON: string[]
+  topRecommendations  String?
+  strongPoints        String?
+  weakPoints          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================================
+// ATELIER 5 — Cartographie IA complète
+// =============================================================
+// L'atelier 5 réutilise le moteur cartography existant (qui
+// génère 6 vues à partir des données collectées). On ajoute :
+//   - Annotations textuelles sur n'importe quel nœud
+//   - Synthèse atelier 5
+//   - Gate atelier 6
+
+model CartographyAnnotation {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Couche concernée : BUSINESS | WORKFLOW | DATA | TECHNOLOGY | RISK | GOVERNANCE
+  layer       String
+  // Identifiant du nœud annoté (id généré par le moteur cartography)
+  nodeId      String
+  // Type d'annotation : NOTE | WARNING | DECISION | QUESTION
+  kind        String  @default("NOTE")
+  // Criticité override : LOW | MEDIUM | HIGH | CRITICAL (optionnel)
+  criticality String?
+  content     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, layer])
+}
+
+model Atelier5Synthesis {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Synthèse globale de la cartographie
+  systemOverview          String?
+  criticalNodes           String?  // JSON: string[] (labels)
+  missingComponents       String?  // JSON: string[]
+  governanceObservations  String?
+  // Recommandations pour le passage à l'atelier 6 (gouvernance)
+  governanceHotspots      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Atelier5Gate {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  sixLayersReviewed       Boolean @default(false)
+  criticalNodesAnnotated  Boolean @default(false)
+  governanceMapDefined    Boolean @default(false)
+  riskMapDefined          Boolean @default(false)
+  synthesisWritten        Boolean @default(false)
+
+  verdict       String    @default("NOT_READY") // NOT_READY | READY | OVERRIDE
+  overrideNotes String?
+  decidedAt     DateTime?
+  decidedBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================================
+// ATELIER 6 — Gouvernance, risques et conformité IA
+// =============================================================
+// Cockpit de gouvernance IA. 8 modules → consolidés via 7
+// modèles spécifiques + dérivation depuis RiskAssessment,
+// HumanValidationPoint, RegulatoryAnalysis (déjà collectés).
+
+// Module 1 — Gouvernance globale (RACI)
+model GovernanceRole {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Scope: domaine de responsabilité (ex. "IA Pipeline", "Sécurité", "RGPD")
+  scope         String
+  // ResponsibilityType: R (Responsible) | A (Accountable) | C (Consulted) | I (Informed)
+  responsibilityType String
+  // ActorRole: rôle/personne (ex. "DPO", "RSSI", "Manager métier", "Mme X")
+  actorRole     String
+  actorName     String?
+  description   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, scope])
+}
+
+// Module 4 — Sécurité & accès (contrôles techniques)
+model SecurityControl {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Domain: AUTH | RBAC | ENCRYPTION | LOGS | SEGMENTATION | MONITORING | BACKUP | OTHER
+  domain        String
+  name          String
+  // Status: PLANNED | IN_PLACE | TESTED | NOT_APPLICABLE
+  status        String  @default("PLANNED")
+  description   String?
+  responsibleRole String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, domain])
+}
+
+// Module 5 — Conformité (RGPD + EU AI Act + interne)
+model ComplianceItem {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Framework: RGPD | EU_AI_ACT | CNIL | INTERNAL | ISO27001 | OTHER
+  framework       String
+  requirementCode String?
+  requirement     String
+  // Status: COMPLIANT | PARTIAL | NON_COMPLIANT | NOT_APPLICABLE
+  status          String  @default("PARTIAL")
+  evidence        String?
+  responsibleRole String?
+  dueBy           DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, framework])
+}
+
+// Module 7 — Monitoring (KPIs à surveiller)
+model MonitoringKpi {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name           String
+  // Category: PERFORMANCE | QUALITY | DRIFT | SECURITY | INCIDENT | USAGE
+  category       String
+  unit           String?
+  targetValue    String?
+  alertThreshold String?
+  // Frequency: REALTIME | HOURLY | DAILY | WEEKLY | MONTHLY
+  frequency      String  @default("DAILY")
+  responsibleRole String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, category])
+}
+
+// Module 8 — Incidents (playbook)
+model IncidentProcedure {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // IncidentType: AI_HALLUCINATION | DATA_LEAK | CLASSIFICATION_ERROR
+  //             | DRIFT | OUTAGE | OCR_ERROR | OTHER
+  incidentType    String
+  // Severity: LOW | MEDIUM | HIGH | CRITICAL
+  severity        String  @default("MEDIUM")
+  detectionMethod String?
+  escalationPath  String?
+  correctiveActions String?
+  postIncidentReview Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model Atelier6Synthesis {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  governanceScore Int?  // 0-100 calculé par l'engine
+  // GovernanceLevel: CRITICAL | LOW | MEDIUM | HIGH | EXCELLENT
+  governanceLevel String?
+
+  strongPoints     String?  // JSON: string[]
+  weakPoints       String?  // JSON: string[]
+  priorityActions  String?  // JSON: string[]
+  overallStatement String?
+  industrializationReadiness Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Atelier6Gate {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  governanceDefined Boolean @default(false)
+  validationsMapped Boolean @default(false)
+  risksControlled   Boolean @default(false)
+  securityDefined   Boolean @default(false)
+  complianceChecked Boolean @default(false)
+  monitoringPlanned Boolean @default(false)
+  incidentsPrepared Boolean @default(false)
+  synthesisWritten  Boolean @default(false)
+
+  verdict       String    @default("NOT_READY")
+  overrideNotes String?
+  decidedAt     DateTime?
+  decidedBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============================================================
+// ATELIER 7 — Architecture cible, roadmap et décision finale IA
+// =============================================================
+// Sommet du framework. Consolide TOUTES les données ateliers 1-6
+// pour produire : vision stratégique, roadmap, plan
+// d'industrialisation, et la DÉCISION FINALE argumentée.
+
+// Module 1 — Vision stratégique
+model StrategicVision {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  visionStatement      String?  // énoncé de vision projet
+  strategicObjectives  String?  // JSON: string[]
+  businessValue        String?  // valeur business attendue
+  transformationGoals  String?  // JSON: string[]
+  successCriteria      String?  // JSON: string[]
+  // BusinessValueScore: 1..5 (impact valeur business)
+  businessValueScore   Int?
+  // TransformationScore: 1..5
+  transformationScore  Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Module 3+4 — Roadmap (phases / lots / quick wins)
+model RoadmapItem {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  // Phase: PHASE_0_POC | PHASE_1_MVP | PHASE_2_PILOT | PHASE_3_ROLLOUT | PHASE_4_RUN
+  phase       String  @default("PHASE_0_POC")
+  position    Int     @default(0)
+  // Impact métier 1..5
+  impact      Int     @default(3)
+  // Complexité 1..5
+  complexity  Int     @default(3)
+  // EffortMonths: estimation en mois
+  effortMonths Int?
+  // Dependencies: JSON: string[] (RoadmapItem ids ou descriptions)
+  dependencies String?
+  // Type: QUICK_WIN | STRATEGIC | DEPENDENCY | RUN
+  itemType    String  @default("STRATEGIC")
+  // Status: PLANNED | IN_PROGRESS | DONE | CANCELLED
+  status      String  @default("PLANNED")
+  ownerRole   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, phase])
+}
+
+// Module 5 — Industrialisation
+model IndustrializationStep {
+  id        String  @id @default(cuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Stage: POC | MVP | PILOT | ROLLOUT | RUN
+  stage         String
+  name          String
+  description   String?
+  // ReadinessLevel 1..5
+  readinessLevel Int  @default(1)
+  // Status: NOT_STARTED | IN_PROGRESS | DONE
+  status         String @default("NOT_STARTED")
+  startTarget    DateTime?
+  endTarget      DateTime?
+  exitCriteria   String?  // critères de sortie de stage
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, stage])
+}
+
+// Module 8 — Synthèse finale + décision globale
+model Atelier7Synthesis {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Score global projet 0-100 (consolide ateliers 4 + 6 + visions atelier 7)
+  globalProjectScore   Int?
+  // GlobalMaturity: IMMATURE | FRAGILE | INTERMEDIATE | MATURE | VERY_MATURE
+  globalMaturity       String?
+  // FinalDecision: GO_IA | POC_IA | AUTOMATION | STUDY | NO_GO
+  finalDecision        String?
+  decisionRationale    String?
+  // Forces / Faiblesses / Risques principaux (JSON: string[])
+  strongPoints         String?
+  weakPoints           String?
+  mainRisks            String?
+  // Roadmap résumée (texte exécutif)
+  roadmapSummary       String?
+  industrializationStrategy String?
+  governanceStrategy   String?
+  pilotageStrategy     String?
+  // Décision sponsor : OK | KO | IN_REVIEW
+  sponsorDecision      String?
+  sponsorName          String?
+  sponsorDecisionDate  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Gate final — clôture du framework
+model Atelier7Gate {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  visionDefined          Boolean @default(false)
+  roadmapBuilt           Boolean @default(false)
+  industrializationPlanned Boolean @default(false)
+  finalDecisionMade      Boolean @default(false)
+  sponsorSignOff         Boolean @default(false)
+  deliverableExported    Boolean @default(false)
+
+  verdict       String @default("NOT_READY") // NOT_READY | CLOSED | OVERRIDE
+  overrideNotes String?
+  decidedAt     DateTime?
+  decidedBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Gate atelier 5 (cartographie)
+// -------------------------------------------------------------
+model Atelier4Gate {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  scoringComplete     Boolean @default(false)
+  weakPointsAddressed Boolean @default(false)
+  priorityDefined     Boolean @default(false)
+  decisionRecommended Boolean @default(false)
+  synthesisWritten    Boolean @default(false)
+
+  verdict       String    @default("NOT_READY")
+  overrideNotes String?
+  decidedAt     DateTime?
+  decidedBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Gate atelier 4 — go/no-go pour passer au scoring
+// -------------------------------------------------------------
+model Atelier3Gate {
+  id        String  @id @default(cuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  coverageReviewComplete   Boolean @default(false)
+  documentaryComplete      Boolean @default(false)
+  regulatoryComplete       Boolean @default(false)
+  maturityScored           Boolean @default(false)
+  feasibilityScored        Boolean @default(false)
+  synthesisWritten         Boolean @default(false)
+  scoringPreparationReady  Boolean @default(false)
+
+  verdict       String    @default("NOT_READY") // NOT_READY | READY | OVERRIDE
+  overrideNotes String?
+  decidedAt     DateTime?
+  decidedBy     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import {
   DECISION_LABELS,
   PROJECT_STATUS_LABELS,
@@ -7,26 +6,32 @@ import {
   type ProjectStatus,
 } from "@/types";
 
-const STATUS_STYLES: Record<ProjectStatus, string> = {
-  DRAFT: "bg-muted text-foreground/70",
-  IN_PROGRESS: "bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-200",
-  SCORED: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200",
-  DECIDED: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200",
-  ARCHIVED: "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+// Semantic palette : success = green, primary = blue (POC / progress),
+// warning = amber (automation), muted = neutral (study / draft), destructive = red.
+
+const STATUS_VARIANTS: Record<ProjectStatus, "muted" | "default" | "primary" | "success"> = {
+  DRAFT: "muted",
+  IN_PROGRESS: "default",
+  SCORED: "primary",
+  DECIDED: "success",
+  ARCHIVED: "muted",
 };
 
-const DECISION_STYLES: Record<Decision, string> = {
-  GO_IA: "bg-emerald-600 text-white",
-  POC_IA: "bg-blue-600 text-white",
-  AUTOMATION: "bg-amber-500 text-white",
-  STUDY: "bg-zinc-500 text-white",
-  NO_GO: "bg-destructive text-white",
+const DECISION_VARIANTS: Record<
+  Decision,
+  "success" | "primary" | "warning" | "muted" | "destructive"
+> = {
+  GO_IA: "success",
+  POC_IA: "primary",
+  AUTOMATION: "warning",
+  STUDY: "muted",
+  NO_GO: "destructive",
 };
 
 export function StatusBadge({ status }: { status: string }) {
   const key = status as ProjectStatus;
   return (
-    <Badge variant="secondary" className={cn("border-0", STATUS_STYLES[key])}>
+    <Badge variant={STATUS_VARIANTS[key] ?? "muted"}>
       {PROJECT_STATUS_LABELS[key] ?? status}
     </Badge>
   );
@@ -34,15 +39,11 @@ export function StatusBadge({ status }: { status: string }) {
 
 export function DecisionBadge({ decision }: { decision: string | null }) {
   if (!decision) {
-    return (
-      <Badge variant="outline" className="text-muted-foreground">
-        En attente
-      </Badge>
-    );
+    return <Badge variant="muted">En attente</Badge>;
   }
   const key = decision as Decision;
   return (
-    <Badge className={cn("border-0", DECISION_STYLES[key])}>
+    <Badge variant={DECISION_VARIANTS[key] ?? "muted"}>
       {DECISION_LABELS[key] ?? decision}
     </Badge>
   );

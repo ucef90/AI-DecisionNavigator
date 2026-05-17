@@ -132,7 +132,7 @@ export default async function DeliverablesIndexPage(
                           {DELIVERABLE_TYPE_LABELS[type]}
                         </span>
                         {isGenerated ? (
-                          <Badge variant="outline" className="text-[10px] text-emerald-700 dark:text-emerald-300">
+                          <Badge variant="default" className="text-[10px]">
                             ✓ Généré
                           </Badge>
                         ) : (

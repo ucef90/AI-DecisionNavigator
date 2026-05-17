@@ -132,7 +132,7 @@ export function DataAssessmentForm({
         />
       </div>
 
-      <section className="space-y-3 rounded-lg border border-amber-300/40 bg-amber-50/50 p-4 dark:bg-amber-950/20">
+      <section className="space-y-3 border-l-[3px] border-destructive bg-secondary p-4">
         <div className="flex items-center gap-1.5">
           <h4 className="text-sm font-semibold">Données personnelles & RGPD</h4>
           <FieldHint>

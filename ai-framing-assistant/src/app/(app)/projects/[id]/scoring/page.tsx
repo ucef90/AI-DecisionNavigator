@@ -17,11 +17,12 @@ import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 import { DECISION_LABELS, type Decision } from "@/types";
 
+// Semantic palette.
 const DECISION_STYLES: Record<Decision, string> = {
-  GO_IA: "bg-emerald-600 text-white",
-  POC_IA: "bg-blue-600 text-white",
-  AUTOMATION: "bg-amber-500 text-white",
-  STUDY: "bg-zinc-500 text-white",
+  GO_IA: "bg-success text-success-foreground",
+  POC_IA: "bg-primary text-primary-foreground",
+  AUTOMATION: "bg-warning text-warning-foreground",
+  STUDY: "bg-secondary text-muted-foreground border border-border",
   NO_GO: "bg-destructive text-white",
 };
 
@@ -131,12 +132,12 @@ export default async function ScoringPage(
               >
                 <span
                   className={cn(
-                    "mt-1 inline-block size-2 shrink-0 rounded-full",
+                    "mt-1.5 inline-block size-2 shrink-0 rounded-full",
                     s.severity === "CRITICAL"
                       ? "bg-destructive"
                       : s.severity === "WARNING"
-                        ? "bg-amber-500"
-                        : "bg-zinc-400",
+                        ? "bg-warning"
+                        : "bg-muted-foreground/50",
                   )}
                 />
                 <div className="space-y-0.5">

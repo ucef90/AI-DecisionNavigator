@@ -150,12 +150,12 @@ export default async function ProjectDetailPage(
               >
                 <span
                   className={cn(
-                    "mt-1 inline-block size-2 shrink-0 rounded-full",
+                    "mt-1.5 inline-block size-1.5 shrink-0",
                     s.severity === "CRITICAL"
                       ? "bg-destructive"
                       : s.severity === "WARNING"
-                        ? "bg-amber-500"
-                        : "bg-zinc-400",
+                        ? "bg-primary"
+                        : "bg-border",
                   )}
                 />
                 <div className="space-y-0.5">

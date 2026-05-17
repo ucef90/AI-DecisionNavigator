@@ -30,11 +30,12 @@ import {
   type Decision,
 } from "@/types";
 
+// Semantic palette.
 const DECISION_STYLES: Record<Decision, string> = {
-  GO_IA: "bg-emerald-600 text-white",
-  POC_IA: "bg-blue-600 text-white",
-  AUTOMATION: "bg-amber-500 text-white",
-  STUDY: "bg-zinc-500 text-white",
+  GO_IA: "bg-success text-success-foreground",
+  POC_IA: "bg-primary text-primary-foreground",
+  AUTOMATION: "bg-warning text-warning-foreground",
+  STUDY: "bg-secondary text-muted-foreground border border-border",
   NO_GO: "bg-destructive text-white",
 };
 
@@ -45,11 +46,13 @@ const RATIONALE_ICONS = {
   RULE: ScrollText,
 } as const;
 
+// Semantic palette : positive = success green, weakness = warning amber,
+// blocker = destructive red, rule = primary blue.
 const RATIONALE_STYLES = {
-  STRENGTH: "text-emerald-600",
-  WEAKNESS: "text-amber-600",
+  STRENGTH: "text-success",
+  WEAKNESS: "text-warning",
   BLOCKER: "text-destructive",
-  RULE: "text-blue-600",
+  RULE: "text-primary",
 } as const;
 
 const HORIZON_LABELS: Record<ActionStep["horizon"], string> = {
@@ -114,10 +117,10 @@ export default async function DecisionPage(
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {decision.overridden ? (
-            <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-50 p-2 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <div className="flex items-start gap-2 border-l-[3px] border-destructive bg-secondary p-3 text-foreground">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
               <div className="space-y-0.5">
-                <p className="text-xs font-semibold">
+                <p className="text-xs font-bold">
                   Décision contrainte par les règles métier
                 </p>
                 <p className="text-xs">

@@ -12,8 +12,11 @@ import {
 } from "@/lib/wizard/steps";
 import type { WizardProgress } from "@/lib/wizard/progress";
 
+// Modern stepper — active step filled vibrant blue, completed steps filled
+// success green, pending steps lavender outline. Engine phase steps are
+// dashed (still optional).
+
 function activeFromPath(pathname: string): WizardStepId | null {
-  // /projects/[id]/wizard/<step-id> or /projects/[id]/<engine-step>
   const segments = pathname.split("/").filter(Boolean);
   const last = segments[segments.length - 1];
   return (WIZARD_STEPS.find((s) => s.id === last)?.id ?? null) as
@@ -47,24 +50,24 @@ export function WizardStepper({
             <Link
               href={wizardStepUrl(projectId, step.id)}
               className={cn(
-                "group flex items-center gap-2 rounded-md border px-2.5 py-1.5 transition-colors",
+                "group inline-flex items-center gap-2 px-3 py-2 rounded-2xl border transition-colors",
                 active
-                  ? "border-foreground bg-foreground text-background"
+                  ? "border-primary bg-primary text-primary-foreground"
                   : done
-                    ? "border-emerald-600/40 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200 hover:border-emerald-600"
+                    ? "border-[color-mix(in_oklab,var(--success)_40%,white)] bg-[color-mix(in_oklab,var(--success)_12%,white)] text-success hover:bg-[color-mix(in_oklab,var(--success)_20%,white)]"
                     : step.phase === "engine"
-                      ? "border-dashed border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground"
-                      : "border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                      ? "border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary"
+                      : "border-border text-muted-foreground hover:border-primary hover:text-primary",
               )}
             >
               <span
                 className={cn(
-                  "inline-flex size-5 items-center justify-center rounded-full text-[10px] font-semibold",
+                  "inline-flex size-5 items-center justify-center text-[10px] font-bold rounded-full",
                   active
-                    ? "bg-background text-foreground"
+                    ? "bg-primary-foreground text-primary"
                     : done
-                      ? "bg-emerald-600 text-white"
-                      : "bg-muted text-foreground/70",
+                      ? "bg-success text-success-foreground"
+                      : "bg-secondary text-muted-foreground",
                 )}
               >
                 {done && !active ? <Check className="size-3" /> : idx + 1}

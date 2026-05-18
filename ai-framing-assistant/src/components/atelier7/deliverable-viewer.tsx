@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Download, Eye } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Copy, Download, Eye, FileDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +13,28 @@ type Props = {
 export function DeliverableViewer({ markdown, projectName }: Props) {
   const [view, setView] = useState<"preview" | "raw">("preview");
   const [copied, setCopied] = useState(false);
+
+  // Met le nom du document propre dans l'onglet pendant l'impression
+  // (Chrome / Edge utilisent document.title comme nom de fichier PDF
+  // par défaut dans la boîte de dialogue "Enregistrer en PDF").
+  useEffect(() => {
+    const original = document.title;
+    function before() {
+      const slug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const date = new Date().toISOString().slice(0, 10);
+      document.title = `dossier-strategique-IA-${slug}-${date}`;
+    }
+    function after() {
+      document.title = original;
+    }
+    window.addEventListener("beforeprint", before);
+    window.addEventListener("afterprint", after);
+    return () => {
+      window.removeEventListener("beforeprint", before);
+      window.removeEventListener("afterprint", after);
+      document.title = original;
+    };
+  }, [projectName]);
 
   function download() {
     const slug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -26,6 +48,15 @@ export function DeliverableViewer({ markdown, projectName }: Props) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  function downloadPdf() {
+    // Force le mode "preview" (markdown brut imprimé = illisible) puis
+    // déclenche la boîte de dialogue d'impression. L'utilisateur choisit
+    // "Enregistrer en PDF" comme destination (défaut sur Chrome / Edge).
+    setView("preview");
+    // Laisse React faire le rendu avant d'ouvrir le dialogue.
+    setTimeout(() => window.print(), 50);
   }
 
   async function copyToClipboard() {
@@ -43,7 +74,7 @@ export function DeliverableViewer({ markdown, projectName }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background p-2">
+      <div className="print:hidden flex flex-wrap items-center gap-2 rounded-md border border-border bg-background p-2">
         <div className="flex rounded-md border border-border bg-background p-0.5">
           <button
             type="button"
@@ -69,17 +100,21 @@ export function DeliverableViewer({ markdown, projectName }: Props) {
             <Copy className="mr-1.5 h-3.5 w-3.5" />
             {copied ? "Copié !" : "Copier"}
           </Button>
-          <Button type="button" size="sm" onClick={download}>
+          <Button type="button" size="sm" variant="outline" onClick={download}>
             <Download className="mr-1.5 h-3.5 w-3.5" />
-            Télécharger .md
+            .md
+          </Button>
+          <Button type="button" size="sm" onClick={downloadPdf} title="Choisis &quot;Enregistrer en PDF&quot; comme destination dans la boîte de dialogue d'impression.">
+            <FileDown className="mr-1.5 h-3.5 w-3.5" />
+            Télécharger PDF
           </Button>
         </div>
       </div>
 
       {view === "preview" ? (
-        <PreviewMarkdown content={markdown} />
+        <PreviewMarkdown content={markdown} projectName={projectName} />
       ) : (
-        <pre className="overflow-x-auto rounded-md border border-border bg-muted/30 p-4 text-xs leading-relaxed">
+        <pre className="print:hidden overflow-x-auto rounded-md border border-border bg-muted/30 p-4 text-xs leading-relaxed">
           <code>{markdown}</code>
         </pre>
       )}
@@ -91,12 +126,20 @@ export function DeliverableViewer({ markdown, projectName }: Props) {
 // le markdown brut joliment formaté avec un peu de styling sur les
 // titres / paragraphes. Suffisant pour l'aperçu visuel ; le téléchargement
 // reste fidèle.
-function PreviewMarkdown({ content }: { content: string }) {
+function PreviewMarkdown({ content, projectName }: { content: string; projectName: string }) {
   // On split par blocs pour appliquer des classes différentes
   const blocks = content.split(/\n\n+/);
+  const printDate = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 
   return (
-    <article className="prose-styles max-w-none rounded-md border border-border bg-background p-6 text-sm leading-relaxed">
+    <article className="deliverable-prose prose-styles max-w-none rounded-md border border-border bg-background p-6 text-sm leading-relaxed print:rounded-none print:border-0 print:p-0">
+      {/* Couverture PDF visible uniquement à l'impression (div, pas <header>
+          car la règle print masque tous les <header> de l'app shell). */}
+      <div className="hidden print:block mb-6 border-b border-foreground/30 pb-3">
+        <div className="text-[10px] uppercase tracking-wider opacity-70">Dossier stratégique IA</div>
+        <h1 className="!mt-1 !mb-0 text-xl font-bold">{projectName}</h1>
+        <div className="mt-1 text-[10px] opacity-70">Édité le {printDate}</div>
+      </div>
       {blocks.map((block, i) => renderBlock(block, i))}
     </article>
   );

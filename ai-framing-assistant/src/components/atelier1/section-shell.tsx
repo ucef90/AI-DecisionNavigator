@@ -41,7 +41,7 @@ export function SectionShell({
 }: SectionShellProps) {
   return (
     <article className="space-y-6">
-      <header className="space-y-2">
+      <header className="print:hidden space-y-2">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
             {phaseLabel}
@@ -53,7 +53,7 @@ export function SectionShell({
         <p className="text-sm text-muted-foreground">{intent}</p>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="print:hidden grid gap-4 lg:grid-cols-2">
         <PedagoCard
           icon={<Lightbulb className="h-4 w-4" />}
           title="Pourquoi cette section ?"
@@ -69,16 +69,18 @@ export function SectionShell({
       </div>
 
       {pieges && pieges.length > 0 ? (
-        <PedagoCard
-          icon={<AlertTriangle className="h-4 w-4" />}
-          title="Pièges fréquents à éviter"
-          tone="rose"
-          items={pieges}
-        />
+        <div className="print:hidden">
+          <PedagoCard
+            icon={<AlertTriangle className="h-4 w-4" />}
+            title="Pièges fréquents à éviter"
+            tone="rose"
+            items={pieges}
+          />
+        </div>
       ) : null}
 
       {exemples && (exemples.bon || exemples.mauvais) ? (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="print:hidden grid gap-3 sm:grid-cols-2">
           {exemples.mauvais ? (
             <ExampleCard tone="rose" label="Mauvais" body={exemples.mauvais} />
           ) : null}
@@ -88,11 +90,11 @@ export function SectionShell({
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(0,18rem)]">
-        <div className="rounded-xl border border-border bg-background p-5 shadow-sm">
+      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(0,18rem)] print:block">
+        <div className="rounded-xl border border-border bg-background p-5 shadow-sm print:border-0 print:bg-transparent print:p-0 print:shadow-none">
           {children}
         </div>
-        {aside ? <div className="space-y-3">{aside}</div> : null}
+        {aside ? <div className="space-y-3 print:hidden">{aside}</div> : null}
       </div>
     </article>
   );

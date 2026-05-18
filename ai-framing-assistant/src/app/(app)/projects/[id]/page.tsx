@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, BookOpenCheck, FileOutput, Map, Scale, Target } from "lucide-react";
+import { ArrowRight, BookOpenCheck, FileDown, FileOutput, Map, Scale, Target } from "lucide-react";
 
 import { DeleteProjectButton } from "@/components/projects/delete-project-button";
 import { NextStepBanner } from "@/components/onboarding/next-step-banner";
@@ -192,21 +192,28 @@ export default async function ProjectDetailPage(
             </div>
             <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
           </Link>
-          <Link
-            href={`/projects/${snapshot.id}/atelier/7`}
-            className="group flex items-center justify-between gap-3 rounded-lg border border-foreground/40 bg-gradient-to-br from-violet-50/40 to-background px-4 py-3 transition hover:border-foreground dark:from-violet-950/30"
-          >
-            <div>
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Atelier 7 sur 7 — Décision finale
+          <div className="group relative flex items-center justify-between gap-3 rounded-lg border border-foreground/40 bg-gradient-to-br from-violet-50/40 to-background px-4 py-3 transition hover:border-foreground dark:from-violet-950/30">
+            <Link href={`/projects/${snapshot.id}/atelier/7`} className="flex flex-1 items-center justify-between gap-3">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Atelier 7 sur 7 — Décision finale
+                </div>
+                <div className="text-sm font-semibold">Architecture cible, roadmap & décision finale IA</div>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Cockpit exécutif, Gantt, dossier exportable.
+                </p>
               </div>
-              <div className="text-sm font-semibold">Architecture cible, roadmap & décision finale IA</div>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Cockpit exécutif, Gantt, dossier exportable.
-              </p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
-          </Link>
+              <ArrowRight className="h-4 w-4 text-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+            </Link>
+            <Link
+              href={`/projects/${snapshot.id}/atelier/7/deliverable`}
+              className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-md bg-foreground px-2 py-1 text-[10px] font-medium text-background shadow hover:bg-foreground/90"
+              title="Aller directement au dossier stratégique final (PDF, markdown, copie)"
+            >
+              <FileDown className="h-3 w-3" />
+              Livrable PDF
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -315,16 +322,25 @@ export default async function ProjectDetailPage(
         </CardContent>
       </Card>
 
-      <div className="flex justify-between gap-2 border-t border-border pt-4">
+      <div className="flex flex-wrap justify-between gap-2 border-t border-border pt-4">
         <Link href="/projects" className={buttonVariants({ variant: "outline" })}>
           ← Retour aux projets
         </Link>
-        <Link
-          href={`/projects/${snapshot.id}/wizard`}
-          className={buttonVariants()}
-        >
-          {questionnaireFilled ? "Reprendre le cadrage" : "Continuer le cadrage"} →
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/projects/${snapshot.id}/atelier/7/deliverable`}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            <FileDown className="mr-1.5 h-4 w-4" />
+            Télécharger le dossier final (PDF)
+          </Link>
+          <Link
+            href={`/projects/${snapshot.id}/wizard`}
+            className={buttonVariants()}
+          >
+            {questionnaireFilled ? "Reprendre le cadrage" : "Continuer le cadrage"} →
+          </Link>
+        </div>
       </div>
 
       {/* Zone de danger */}

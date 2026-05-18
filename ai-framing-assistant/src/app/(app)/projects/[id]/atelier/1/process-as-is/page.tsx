@@ -1,22 +1,18 @@
 import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
-import { ItemList, safeJSON } from "@/components/common/data-block";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { ProcessStepsEditor } from "@/components/atelier1/editors/process-steps-editor";
+import { addProcessStep, deleteProcessStep, updateProcessStep } from "@/lib/actions/atelier1";
 import { loadAtelierSnapshot } from "@/lib/engines/atelier1";
-import { PROCESS_STEP_MODE_LABELS, PROCESS_STEP_TYPE_LABELS, type ProcessStepMode, type ProcessStepType } from "@/types/atelier1";
-
-const MODE_COLOR = {
-  MANUAL: "border-rose-500/40 bg-rose-50/40 dark:bg-rose-950/20",
-  SEMI_AUTOMATED: "border-amber-500/40 bg-amber-50/40 dark:bg-amber-950/20",
-  AUTOMATED: "border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-950/20",
-};
 
 export default async function ProcessAsIsPage(props: PageProps<"/projects/[id]/atelier/1/process-as-is">) {
   const { id } = await props.params;
   const snap = await loadAtelierSnapshot(id);
   if (!snap) notFound();
+
+  async function onCreate(formData: FormData) { "use server"; await addProcessStep(id, formData); }
+  async function onUpdate(stepId: string, formData: FormData) { "use server"; await updateProcessStep(id, stepId, formData); }
+  async function onDelete(stepId: string) { "use server"; await deleteProcessStep(id, stepId); }
 
   const totalDuration = snap.processSteps.reduce((s, x) => s + (x.durationMin ?? 0), 0);
   const manualCount = snap.processSteps.filter((x) => x.mode === "MANUAL").length;
@@ -54,31 +50,20 @@ export default async function ProcessAsIsPage(props: PageProps<"/projects/[id]/a
           </div>
         </div>
       ) : null}
-      <ItemList
-        items={snap.processSteps}
-        empty="Workflow AS-IS non cartographié."
-        render={(s) => {
-          const tools = safeJSON<string[]>(s.tools, []);
-          return (
-            <div key={s.id} className={cn("rounded-md border p-3", MODE_COLOR[s.mode as ProcessStepMode] ?? "border-border")}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-foreground/10 text-xs font-bold">{s.order}</span>
-                  <span className="font-semibold">{s.name}</span>
-                </div>
-                <div className="flex gap-1">
-                  <Badge variant="outline" className="text-[9px]">{PROCESS_STEP_TYPE_LABELS[s.stepType as ProcessStepType] ?? s.stepType}</Badge>
-                  <Badge variant="outline" className="text-[9px]">{PROCESS_STEP_MODE_LABELS[s.mode as ProcessStepMode] ?? s.mode}</Badge>
-                  {s.durationMin ? <Badge variant="outline" className="text-[9px]">{s.durationMin}min</Badge> : null}
-                </div>
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {s.actor ? <span><strong>Acteur :</strong> {s.actor}</span> : null}
-                {tools.length > 0 ? <span className="ml-3"><strong>Outils :</strong> {tools.join(", ")}</span> : null}
-              </div>
-            </div>
-          );
-        }}
+      <ProcessStepsEditor
+        items={snap.processSteps.map((s) => ({
+          id: s.id,
+          order: s.order,
+          name: s.name,
+          actor: s.actor,
+          mode: s.mode,
+          stepType: s.stepType,
+          durationMin: s.durationMin,
+          tools: s.tools,
+        }))}
+        onCreate={onCreate}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
       />
     </SectionShell>
   );

@@ -1,22 +1,19 @@
 import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
-import { ItemList } from "@/components/common/data-block";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { KpisEditor } from "@/components/atelier1/editors/kpis-editor";
+import { addKpi, deleteKpi, updateKpi } from "@/lib/actions/atelier1";
 import { loadAtelierSnapshot } from "@/lib/engines/atelier1";
-import { KPI_MEASURE_STATUS_LABELS, type KpiMeasureStatus } from "@/types/atelier1";
-
-const STATUS_COLOR = {
-  NOT_MEASURED: "border-rose-500/40 bg-rose-50/40 dark:bg-rose-950/20",
-  ESTIMATED: "border-amber-500/40 bg-amber-50/40 dark:bg-amber-950/20",
-  MEASURED: "border-emerald-500/40 bg-emerald-50/40 dark:bg-emerald-950/20",
-} as const;
 
 export default async function KpisPage(props: PageProps<"/projects/[id]/atelier/1/kpis">) {
   const { id } = await props.params;
   const snap = await loadAtelierSnapshot(id);
   if (!snap) notFound();
+
+  async function onCreate(formData: FormData) { "use server"; await addKpi(id, formData); }
+  async function onUpdate(itemId: string, formData: FormData) { "use server"; await updateKpi(id, itemId, formData); }
+  async function onDelete(itemId: string) { "use server"; await deleteKpi(id, itemId); }
+
   const measured = snap.kpis.filter((k) => k.measureStatus === "MEASURED").length;
 
   return (
@@ -37,26 +34,22 @@ export default async function KpisPage(props: PageProps<"/projects/[id]/atelier/
       ]}
     >
       <div className="mb-4 text-sm">
-        <strong>{measured}/{snap.kpis.length}</strong> KPI réellement mesurés (les autres sont estimés ou non mesurés).
+        <strong>{measured}/{snap.kpis.length}</strong> KPI réellement mesurés.
       </div>
-      <ItemList
-        items={snap.kpis}
-        empty="Aucun KPI défini."
-        render={(k) => (
-          <div key={k.id} className={cn("rounded-md border p-3", STATUS_COLOR[k.measureStatus as KpiMeasureStatus])}>
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="font-semibold">{k.name}</div>
-                <div className="mt-1 flex flex-wrap gap-3 text-xs">
-                  <span><strong>Actuel :</strong> {k.currentValue ?? "—"} {k.unit ?? ""}</span>
-                  <span><strong>Cible :</strong> {k.targetValue ?? "—"} {k.unit ?? ""}</span>
-                  {k.source ? <span><strong>Source :</strong> {k.source}</span> : null}
-                </div>
-              </div>
-              <Badge variant="outline" className="shrink-0 text-[9px]">{KPI_MEASURE_STATUS_LABELS[k.measureStatus as KpiMeasureStatus] ?? k.measureStatus}</Badge>
-            </div>
-          </div>
-        )}
+      <KpisEditor
+        items={snap.kpis.map((k) => ({
+          id: k.id,
+          name: k.name,
+          unit: k.unit,
+          currentValue: k.currentValue,
+          targetValue: k.targetValue,
+          source: k.source,
+          measureStatus: k.measureStatus,
+          notes: k.notes,
+        }))}
+        onCreate={onCreate}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
       />
     </SectionShell>
   );

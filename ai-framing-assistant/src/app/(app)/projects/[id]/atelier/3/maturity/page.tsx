@@ -1,18 +1,18 @@
 import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
-import { DataBlock, EmptyState } from "@/components/common/data-block";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { deriveMaturity, loadAtelier3Snapshot } from "@/lib/engines/atelier3";
+import { ScoreAxesEditor } from "@/components/atelier3/editors/score-axes-editor";
+import { saveMaturityAssessment } from "@/lib/actions/atelier3";
+import { loadAtelier3Snapshot, deriveMaturity } from "@/lib/engines/atelier3";
 
-function bar(v: number) {
-  return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-      <div className={cn("h-full", v < 2.5 ? "bg-rose-500" : v < 4 ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${(v / 5) * 100}%` }} />
-    </div>
-  );
-}
+const AXES = [
+  { name: "needClarity", label: "Clarté du besoin", axisKey: "needClarity" },
+  { name: "workflowKnowledge", label: "Connaissance workflow", axisKey: "workflowKnowledge" },
+  { name: "dataMaturity", label: "Maturité data", axisKey: "dataMaturity" },
+  { name: "governanceMaturity", label: "Gouvernance", axisKey: "governanceMaturity" },
+  { name: "stakeholderAlignment", label: "Alignement stakeholders", axisKey: "stakeholderAlignment" },
+  { name: "realismLevel", label: "Réalisme", axisKey: "realismLevel" },
+];
 
 export default async function A3MaturityPage(props: PageProps<"/projects/[id]/atelier/3/maturity">) {
   const { id } = await props.params;
@@ -21,50 +21,42 @@ export default async function A3MaturityPage(props: PageProps<"/projects/[id]/at
   const m = snap.maturity;
   const derived = deriveMaturity(snap);
 
+  async function action(formData: FormData) {
+    "use server";
+    await saveMaturityAssessment(id, formData);
+  }
+
   return (
     <SectionShell
       phaseLabel="Phase C — Maturité & faisabilité"
-      title="Maturité projet"
+      title="Maturité projet (auto-évaluation)"
       livrableRef="§14 du livrable atelier 3"
-      intent="Auto-évaluation maturité (CDP) + maturité dérivée (moteur) — révèle les écarts de perception."
-      pourquoi={["Auto-éval seule = subjective. Moteur seul = aveugle au contexte.", "L'écart auto/dérivé révèle les angles morts.", "Score atelier 4 utilise les 2."]}
-      cherche={["Tous les axes auto-évalués (1-5).", "Comparaison avec la maturité dérivée.", "Notes d'auto-évaluation expliquées."]}
+      intent="Auto-évaluation maturité (CDP) + maturité dérivée (moteur) — révèle les écarts."
+      pourquoi={["Auto-éval seule = subjective. Moteur seul = aveugle au contexte.", "L'écart auto/dérivé révèle les angles morts."]}
+      cherche={["Tous les axes auto-évalués (1-5).", "Notes d'auto-évaluation expliquées."]}
     >
-      <div className="mb-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-md border border-foreground/15 bg-muted/30 p-3">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Maturité dérivée (moteur)</div>
-          <div className="mt-1 text-lg font-semibold">{derived.overall}</div>
-        </div>
-        <div className="rounded-md border border-foreground/15 bg-muted/30 p-3">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Auto-déclarée</div>
-          <div className="mt-1 text-lg font-semibold">{m ? "OUI" : "Non remplie"}</div>
-        </div>
+      <div className="mb-4 rounded-md border border-foreground/15 bg-muted/30 p-3 text-xs">
+        <strong>Maturité dérivée par le moteur :</strong> {derived.overall}
+        <span className="ml-2 text-muted-foreground">
+          (Besoin {derived.needClarity}/5, Workflow {derived.workflowKnowledge}/5, Data {derived.dataMaturity}/5,
+          Gouv {derived.governanceMaturity}/5, Align {derived.stakeholderAlignment}/5, Réalisme {derived.realismLevel}/5)
+        </span>
       </div>
-
-      {!m ? <EmptyState message="Auto-évaluation non remplie." /> : (
-        <div className="space-y-3">
-          {([
-            { label: "Clarté besoin", auto: m.needClarity, derived: derived.needClarity },
-            { label: "Connaissance workflow", auto: m.workflowKnowledge, derived: derived.workflowKnowledge },
-            { label: "Maturité data", auto: m.dataMaturity, derived: derived.dataMaturity },
-            { label: "Gouvernance", auto: m.governanceMaturity, derived: derived.governanceMaturity },
-            { label: "Alignement stakeholders", auto: m.stakeholderAlignment, derived: derived.stakeholderAlignment },
-            { label: "Réalisme", auto: m.realismLevel, derived: derived.realismLevel },
-          ]).map((a) => (
-            <div key={a.label} className="rounded-md border border-border bg-background p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">{a.label}</span>
-                <div className="flex gap-2 text-xs">
-                  <Badge variant="outline" className="text-[9px]">Auto {a.auto ?? "—"}/5</Badge>
-                  <Badge variant="outline" className="text-[9px]">Moteur {a.derived}/5</Badge>
-                </div>
-              </div>
-              {a.auto ? <div className="mt-1.5">{bar(a.auto)}</div> : null}
-            </div>
-          ))}
-          <DataBlock title="Notes d'auto-évaluation" body={m.selfAssessmentNotes} />
-        </div>
-      )}
+      <ScoreAxesEditor
+        axes={AXES}
+        defaults={{
+          needClarity: m?.needClarity ?? null,
+          workflowKnowledge: m?.workflowKnowledge ?? null,
+          dataMaturity: m?.dataMaturity ?? null,
+          governanceMaturity: m?.governanceMaturity ?? null,
+          stakeholderAlignment: m?.stakeholderAlignment ?? null,
+          realismLevel: m?.realismLevel ?? null,
+        }}
+        notesName="selfAssessmentNotes"
+        notesLabel="Notes d'auto-évaluation"
+        notesDefaultValue={m?.selfAssessmentNotes ?? ""}
+        action={action}
+      />
     </SectionShell>
   );
 }

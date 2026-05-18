@@ -1,17 +1,21 @@
 import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
-import { ItemList } from "@/components/common/data-block";
-import { Badge } from "@/components/ui/badge";
+import { SecurityEditor } from "@/components/atelier6/editors/security-editor";
 import { cn } from "@/lib/utils";
+import { addSecurityControl, deleteSecurityControl, updateSecurityControl } from "@/lib/actions/atelier6";
 import { computeSecurityCoverage, loadAtelier6Snapshot } from "@/lib/engines/atelier6";
-import { SECURITY_DOMAIN_LABELS, SECURITY_STATUS_COLORS, SECURITY_STATUS_LABELS, type SecurityDomain, type SecurityStatus } from "@/types/atelier6";
+import { SECURITY_DOMAIN_LABELS, type SecurityDomain } from "@/types/atelier6";
 
 export default async function A6SecurityPage(props: PageProps<"/projects/[id]/atelier/6/security">) {
   const { id } = await props.params;
   const snap = await loadAtelier6Snapshot(id);
   if (!snap) notFound();
   const coverage = computeSecurityCoverage(snap);
+
+  async function onCreate(formData: FormData) { "use server"; await addSecurityControl(id, formData); }
+  async function onUpdate(cid: string, formData: FormData) { "use server"; await updateSecurityControl(id, cid, formData); }
+  async function onDelete(cid: string) { "use server"; await deleteSecurityControl(id, cid); }
 
   return (
     <SectionShell
@@ -35,24 +39,18 @@ export default async function A6SecurityPage(props: PageProps<"/projects/[id]/at
         ))}
       </div>
 
-      <ItemList
-        items={snap.securityControls}
-        empty="Aucun contrôle sécurité listé."
-        render={(c) => (
-          <div key={c.id} className={cn("rounded-md border p-3", SECURITY_STATUS_COLORS[c.status as SecurityStatus])}>
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="font-semibold">{c.name}</div>
-                {c.description ? <p className="mt-1 text-xs">{c.description}</p> : null}
-                {c.responsibleRole ? <p className="mt-1 text-[11px] italic text-muted-foreground">Responsable : {c.responsibleRole}</p> : null}
-              </div>
-              <div className="flex shrink-0 flex-col items-end gap-1">
-                <Badge variant="outline" className="text-[9px]">{SECURITY_DOMAIN_LABELS[c.domain as SecurityDomain] ?? c.domain}</Badge>
-                <Badge variant="outline" className="text-[9px]">{SECURITY_STATUS_LABELS[c.status as SecurityStatus] ?? c.status}</Badge>
-              </div>
-            </div>
-          </div>
-        )}
+      <SecurityEditor
+        items={snap.securityControls.map((c) => ({
+          id: c.id,
+          domain: c.domain,
+          name: c.name,
+          status: c.status,
+          description: c.description,
+          responsibleRole: c.responsibleRole,
+        }))}
+        onCreate={onCreate}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
       />
     </SectionShell>
   );

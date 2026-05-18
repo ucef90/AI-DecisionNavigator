@@ -1,20 +1,21 @@
 import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
-import { DataBlock, EmptyState, ListBlock, safeJSON } from "@/components/common/data-block";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { ScoreAxesEditor } from "@/components/atelier3/editors/score-axes-editor";
+import { safeJSON } from "@/components/common/data-block";
+import { SelectField } from "@/components/atelier1/editors/form-fields";
+import { Textarea } from "@/components/ui/textarea";
+import { A3_OVERALL_FEASIBILITIES, A3_OVERALL_FEASIBILITY_LABELS } from "@/types/atelier3";
+import { saveFeasibilityAssessment } from "@/lib/actions/atelier3";
 import { loadAtelier3Snapshot } from "@/lib/engines/atelier3";
-import { A3_OVERALL_FEASIBILITY_LABELS, type A3OverallFeasibility } from "@/types/atelier3";
 
-function bar(v: number | null | undefined) {
-  if (!v) return null;
-  return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-      <div className={cn("h-full", v <= 2 ? "bg-rose-500" : v <= 3 ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${(v / 5) * 100}%` }} />
-    </div>
-  );
-}
+const AXES = [
+  { name: "technicallyFeasible", label: "Faisabilité technique", axisKey: "technicallyFeasible" },
+  { name: "organizationallyFeasible", label: "Faisabilité organisationnelle", axisKey: "organizationallyFeasible" },
+  { name: "regulatorilyFeasible", label: "Faisabilité réglementaire", axisKey: "regulatorilyFeasible" },
+  { name: "resourcesAvailable", label: "Ressources disponibles", axisKey: "resourcesAvailable" },
+  { name: "dataAvailable", label: "Données disponibles", axisKey: "dataAvailable" },
+];
 
 export default async function A3FeasibilityPage(props: PageProps<"/projects/[id]/atelier/3/feasibility">) {
   const { id } = await props.params;
@@ -22,44 +23,54 @@ export default async function A3FeasibilityPage(props: PageProps<"/projects/[id]
   if (!snap) notFound();
   const f = snap.feasibility;
 
+  async function action(formData: FormData) {
+    "use server";
+    await saveFeasibilityAssessment(id, formData);
+  }
+
   return (
     <SectionShell
       phaseLabel="Phase C — Maturité & faisabilité"
       title="Faisabilité globale"
       livrableRef="§15 du livrable atelier 3"
-      intent="Évaluer faisabilité sur 5 axes : technique, organisationnelle, réglo, ressources, données."
+      intent="Évaluer la faisabilité sur 5 axes + lister bloquants et leviers."
       pourquoi={["Le maillon faible détermine la faisabilité globale.", "Atelier 4 (axe faisabilité) consomme directement ces scores."]}
-      cherche={["Tous les axes scorés (1-5).", "Verdict global cohérent.", "Bloquants et leviers listés."]}
+      cherche={["Tous les axes scorés (1-5).", "Bloquants/leviers explicites.", "Verdict global cohérent."]}
     >
-      {!f ? <EmptyState message="Faisabilité non évaluée." /> : (
-        <div className="space-y-3">
-          {f.overallFeasibility ? (
-            <div className="rounded-md border border-foreground/15 bg-muted/30 p-4">
-              <Badge variant="outline" className="text-[10px]">Verdict global</Badge>
-              <div className="mt-1 text-lg font-semibold">{A3_OVERALL_FEASIBILITY_LABELS[f.overallFeasibility as A3OverallFeasibility] ?? f.overallFeasibility}</div>
+      <ScoreAxesEditor
+        axes={AXES}
+        defaults={{
+          technicallyFeasible: f?.technicallyFeasible ?? null,
+          organizationallyFeasible: f?.organizationallyFeasible ?? null,
+          regulatorilyFeasible: f?.regulatorilyFeasible ?? null,
+          resourcesAvailable: f?.resourcesAvailable ?? null,
+          dataAvailable: f?.dataAvailable ?? null,
+        }}
+        notesName="notes"
+        notesLabel="Notes"
+        notesDefaultValue={f?.notes ?? ""}
+        action={action}
+        extraAfter={
+          <div className="space-y-3">
+            <SelectField
+              label="Verdict global de faisabilité"
+              name="overallFeasibility"
+              defaultValue={f?.overallFeasibility ?? "MEDIUM"}
+              options={A3_OVERALL_FEASIBILITIES.map((v) => ({ value: v, label: A3_OVERALL_FEASIBILITY_LABELS[v] }))}
+            />
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Bloquants (un par ligne)</label>
+                <Textarea name="blockingFactors" rows={3} defaultValue={safeJSON<string[]>(f?.blockingFactors, []).join("\n")} placeholder={"ex. API CRM à exposer\nHistorique étiquetage à constituer"} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Leviers (un par ligne)</label>
+                <Textarea name="enablers" rows={3} defaultValue={safeJSON<string[]>(f?.enablers, []).join("\n")} placeholder={"ex. Sponsor engagé\nÉquipe data interne disponible"} />
+              </div>
             </div>
-          ) : null}
-
-          {([
-            { label: "Technique", val: f.technicallyFeasible },
-            { label: "Organisationnelle", val: f.organizationallyFeasible },
-            { label: "Réglementaire", val: f.regulatorilyFeasible },
-            { label: "Ressources", val: f.resourcesAvailable },
-            { label: "Données", val: f.dataAvailable },
-          ]).map((a) => (
-            <div key={a.label} className="rounded-md border border-border bg-background p-3">
-              <div className="flex items-center justify-between text-sm"><span className="font-semibold">{a.label}</span><span className="font-semibold tabular-nums">{a.val ?? "—"}/5</span></div>
-              {a.val ? <div className="mt-1.5">{bar(a.val)}</div> : null}
-            </div>
-          ))}
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <ListBlock title="Bloquants" items={safeJSON<string[]>(f.blockingFactors, [])} />
-            <ListBlock title="Leviers" items={safeJSON<string[]>(f.enablers, [])} />
           </div>
-          <DataBlock title="Notes" body={f.notes} />
-        </div>
-      )}
+        }
+      />
     </SectionShell>
   );
 }

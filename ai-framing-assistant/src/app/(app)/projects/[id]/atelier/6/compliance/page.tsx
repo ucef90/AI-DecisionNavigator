@@ -1,18 +1,21 @@
 import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
+import { ComplianceEditor } from "@/components/atelier6/editors/compliance-editor";
 import { ComplianceGauge } from "@/components/visualizations/compliance-gauge";
-import { ItemList } from "@/components/common/data-block";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { addComplianceItem, deleteComplianceItem, updateComplianceItem } from "@/lib/actions/atelier6";
 import { computeComplianceByFramework, loadAtelier6Snapshot } from "@/lib/engines/atelier6";
-import { COMPLIANCE_FRAMEWORK_LABELS, COMPLIANCE_STATUS_COLORS, COMPLIANCE_STATUS_LABELS, type ComplianceFramework, type ComplianceStatus } from "@/types/atelier6";
+import { COMPLIANCE_FRAMEWORK_LABELS, type ComplianceFramework } from "@/types/atelier6";
 
 export default async function A6CompliancePage(props: PageProps<"/projects/[id]/atelier/6/compliance">) {
   const { id } = await props.params;
   const snap = await loadAtelier6Snapshot(id);
   if (!snap) notFound();
   const byFw = computeComplianceByFramework(snap);
+
+  async function onCreate(formData: FormData) { "use server"; await addComplianceItem(id, formData); }
+  async function onUpdate(cid: string, formData: FormData) { "use server"; await updateComplianceItem(id, cid, formData); }
+  async function onDelete(cid: string) { "use server"; await deleteComplianceItem(id, cid); }
 
   return (
     <SectionShell
@@ -31,25 +34,19 @@ export default async function A6CompliancePage(props: PageProps<"/projects/[id]/
         </div>
       ) : null}
 
-      <ItemList
-        items={snap.complianceItems}
-        empty="Aucun item de conformité saisi."
-        render={(c) => (
-          <div key={c.id} className={cn("rounded-md border p-3", COMPLIANCE_STATUS_COLORS[c.status as ComplianceStatus])}>
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[9px]">{COMPLIANCE_FRAMEWORK_LABELS[c.framework as ComplianceFramework] ?? c.framework}</Badge>
-                  {c.requirementCode ? <Badge variant="outline" className="text-[9px]">{c.requirementCode}</Badge> : null}
-                </div>
-                <p className="mt-1 text-sm">{c.requirement}</p>
-                {c.evidence ? <p className="mt-1 text-[11px] italic text-muted-foreground">Preuve : {c.evidence}</p> : null}
-                {c.responsibleRole ? <p className="mt-1 text-[10px] text-muted-foreground">Responsable : {c.responsibleRole}</p> : null}
-              </div>
-              <Badge variant="outline" className="shrink-0 text-[9px]">{COMPLIANCE_STATUS_LABELS[c.status as ComplianceStatus] ?? c.status}</Badge>
-            </div>
-          </div>
-        )}
+      <ComplianceEditor
+        items={snap.complianceItems.map((c) => ({
+          id: c.id,
+          framework: c.framework,
+          requirementCode: c.requirementCode,
+          requirement: c.requirement,
+          status: c.status,
+          evidence: c.evidence,
+          responsibleRole: c.responsibleRole,
+        }))}
+        onCreate={onCreate}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
       />
     </SectionShell>
   );

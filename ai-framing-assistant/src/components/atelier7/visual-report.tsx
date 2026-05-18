@@ -7,6 +7,8 @@ import { RadarChart } from "@/components/scoring/radar-chart";
 import { RaciMatrix } from "@/components/visualizations/raci-matrix";
 import { GanttChart, type GanttItem } from "@/components/visualizations/gantt-chart";
 import { ComplianceGauge } from "@/components/visualizations/compliance-gauge";
+import { PriorityMatrix } from "@/components/visualizations/priority-matrix";
+import { RiskHeatmap } from "@/components/visualizations/risk-heatmap";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { RaciType } from "@/types/atelier6";
@@ -259,6 +261,22 @@ export function VisualReport({ data }: { data: VisualReportData }) {
           </Block>
         ) : null}
 
+        {data.a6.riskHeatmap.length > 0 ? (
+          <Block title="Heatmap risques IA (probabilité × impact)">
+            <div className="text-[10px]">
+              <RiskHeatmap
+                points={data.a6.riskHeatmap.map((r) => ({
+                  label: r.label,
+                  impact: r.impact,
+                  probability: r.probability,
+                  short: r.label.split(" ")[0],
+                }))}
+                compact
+              />
+            </div>
+          </Block>
+        ) : null}
+
         {data.a6.synthesisStatement ? (
           <Block title="Synthèse gouvernance">
             <p className="text-xs leading-relaxed">{data.a6.synthesisStatement}</p>
@@ -295,6 +313,14 @@ export function VisualReport({ data }: { data: VisualReportData }) {
                   complexity: i.complexity,
                 })) satisfies GanttItem[]}
               />
+            </div>
+          </Block>
+        ) : null}
+
+        {data.a7.priorityMatrix.length > 0 ? (
+          <Block title="Matrice de priorisation (impact × complexité)">
+            <div className="text-[10px]">
+              <PriorityMatrix items={data.a7.priorityMatrix} />
             </div>
           </Block>
         ) : null}

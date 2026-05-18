@@ -357,11 +357,19 @@
    Print — only the deliverable body is rendered.
    ------------------------------------------------------------- */
 @media print {
-  body { background: white !important; color: black !important; }
+  /* CRITIQUE — sans ces propriétés, le navigateur retire les couleurs de
+     fond (RACI, jauges, Gantt, badges…) à l'impression. Spec moderne :
+     `print-color-adjust`. Anciens Chrome/Safari/Edge : `-webkit-print-color-adjust`. */
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  body { background: white !important; }
   aside, header, nav, .print\:hidden { display: none !important; }
   main { padding: 0 !important; overflow: visible !important; }
+
   .deliverable-prose {
-    color: black !important;
     font-size: 11pt;
     line-height: 1.5;
   }
@@ -371,5 +379,10 @@
   .deliverable-prose table,
   .deliverable-prose pre,
   .deliverable-prose blockquote { page-break-inside: avoid; }
-  @page { margin: 2cm 2.2cm; }
+
+  /* Les SVG (radar, jauges, etc.) doivent rester visibles sur fond blanc.
+     On préserve les couleurs déclarées explicitement dans les composants. */
+  svg { print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
+
+  @page { margin: 1.5cm 1.8cm; }
 }

@@ -12,12 +12,14 @@ import {
   aggregateGovernanceScore,
   computeComplianceByFramework,
   computeDimensionScores,
+  computeRiskHeatmap,
   computeSecurityCoverage,
 } from "@/lib/engines/atelier6";
 import {
   computeFinalDecision,
   computeGlobalProjectScore,
   computeIndustrializationReadiness,
+  computePriorityMatrix,
   type Atelier7Snapshot,
 } from "@/lib/engines/atelier7";
 import { DECISION_LABELS, type Decision } from "@/types";
@@ -139,6 +141,7 @@ export type VisualReportData = {
     securityCoverage: { domain: string; active: number; controls: number; status: string }[];
     monitoringKpis: { name: string; category: string; targetValue: string | null; alertThreshold: string | null }[];
     incidents: { type: IncidentType; severity: string; detection: string | null; postMortem: boolean }[];
+    riskHeatmap: { label: string; impact: number; probability: number }[];
     industrializationReadiness: boolean;
     synthesisStatement: string | null;
   };
@@ -167,6 +170,7 @@ export type VisualReportData = {
       why?: string;
       planned: number;
     }[];
+    priorityMatrix: { id: string; title: string; impact: number; complexity: number }[];
   };
 };
 
@@ -190,6 +194,8 @@ export function buildVisualReportData(snap: Atelier7Snapshot, a5Data?: A5Extra):
   const compliance = computeComplianceByFramework(a6);
   const security = computeSecurityCoverage(a6);
   const readiness = computeIndustrializationReadiness(snap);
+  const riskHeatmap = computeRiskHeatmap(a6);
+  const priorityMatrix = computePriorityMatrix(snap);
 
   // ----- Cover -----
   const sponsorDec = snap.synthesis?.sponsorDecision as SponsorDecision | null;
@@ -324,6 +330,7 @@ export function buildVisualReportData(snap: Atelier7Snapshot, a5Data?: A5Extra):
     securityCoverage: security.map((s) => ({ domain: s.domain, active: s.active, controls: s.controls, status: s.status })),
     monitoringKpis: a6.monitoringKpis.map((k) => ({ name: k.name, category: k.category, targetValue: k.targetValue, alertThreshold: k.alertThreshold })),
     incidents: a6.incidentProcedures.map((p) => ({ type: p.incidentType as IncidentType, severity: p.severity, detection: p.detectionMethod, postMortem: p.postIncidentReview })),
+    riskHeatmap: riskHeatmap.map((r) => ({ label: r.label, impact: r.impact, probability: r.probability })),
     industrializationReadiness: Boolean(a6.synthesis?.industrializationReadiness),
     synthesisStatement: a6.synthesis?.overallStatement ?? null,
   };
@@ -355,6 +362,7 @@ export function buildVisualReportData(snap: Atelier7Snapshot, a5Data?: A5Extra):
       why: r.why,
       planned: snap.industrializationSteps.filter((s) => s.stage === r.stage).length,
     })),
+    priorityMatrix: priorityMatrix.map((p) => ({ id: p.id, title: p.title, impact: p.impact, complexity: p.complexity })),
   };
 
   return {

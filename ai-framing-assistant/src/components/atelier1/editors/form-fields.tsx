@@ -2,11 +2,27 @@
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { HelpHint } from "@/components/ui/help-hint";
+import { getHint } from "@/lib/field-hints";
 
 // Helpers form réutilisés par tous les éditeurs. Évite la
 // duplication des composants Field/SelectField/TextareaField.
+//
+// Chaque label peut afficher un petit "(i)" cliquable au survol —
+// soit explicite via la prop `hint`, soit auto-trouvé dans
+// FIELD_HINTS via l'attribut `name`.
 
 type Option = { value: string; label: string };
+
+function FieldLabel({ label, name, hint }: { label: string; name: string; hint?: string }) {
+  const help = hint ?? getHint(name);
+  return (
+    <label className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+      <span>{label}</span>
+      {help ? <HelpHint hint={help} /> : null}
+    </label>
+  );
+}
 
 export function Field({
   label,
@@ -17,6 +33,7 @@ export function Field({
   placeholder,
   min,
   max,
+  hint,
 }: {
   label: string;
   name: string;
@@ -26,10 +43,11 @@ export function Field({
   placeholder?: string;
   min?: number;
   max?: number;
+  hint?: string;
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</label>
+      <FieldLabel label={label} name={name} hint={hint} />
       <Input
         name={name}
         type={type}
@@ -48,15 +66,17 @@ export function SelectField({
   name,
   defaultValue,
   options,
+  hint,
 }: {
   label: string;
   name: string;
   defaultValue: string;
   options: Option[];
+  hint?: string;
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</label>
+      <FieldLabel label={label} name={name} hint={hint} />
       <select
         name={name}
         defaultValue={defaultValue}
@@ -78,16 +98,18 @@ export function TextareaField({
   defaultValue,
   rows = 2,
   placeholder,
+  hint,
 }: {
   label: string;
   name: string;
   defaultValue?: string;
   rows?: number;
   placeholder?: string;
+  hint?: string;
 }) {
   return (
     <div className="space-y-1">
-      <label className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</label>
+      <FieldLabel label={label} name={name} hint={hint} />
       <Textarea
         name={name}
         rows={rows}

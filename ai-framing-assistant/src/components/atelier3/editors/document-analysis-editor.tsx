@@ -6,7 +6,19 @@ import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, SelectField, TextareaField } from "@/components/atelier1/editors/form-fields";
+import { HelpHint } from "@/components/ui/help-hint";
+import { getHint } from "@/lib/field-hints";
 import { DOC_COMPLEXITY_LABELS, DOC_COMPLEXITY_LEVELS, DOC_EXPLOITABILITIES, DOC_EXPLOITABILITY_LABELS, DOC_STRUCTURE_LABELS, DOC_STRUCTURE_LEVELS } from "@/types/atelier3";
+
+function CB({ label, name }: { label: string; name: string }) {
+  const h = getHint(name);
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span>{label}</span>
+      {h ? <HelpHint hint={h} /> : null}
+    </span>
+  );
+}
 
 export type DocumentAnalysisDefaults = {
   documentsExist: boolean;
@@ -30,7 +42,7 @@ export function DocumentAnalysisEditor({ defaults, action }: { defaults: Documen
     <form action={(formData) => { startTransition(async () => { await action(formData); setSaved(true); setTimeout(() => setSaved(false), 2500); }); }} className="space-y-4">
       <label className="flex items-center gap-2 text-sm">
         <Checkbox name="documentsExist" defaultChecked={defaults.documentsExist} />
-        Des documents sont concernés par le projet
+        <CB label="Des documents sont concernés par le projet" name="documentsExist" />
       </label>
 
       <Field label="Formats (séparés par ,)" name="formats" defaultValue={defaults.formats} placeholder="PDF, DOCX, JPG (scan), Email HTML" />
@@ -44,10 +56,10 @@ export function DocumentAnalysisEditor({ defaults, action }: { defaults: Documen
       <fieldset className="rounded-md border border-border bg-background p-3">
         <legend className="px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Technos nécessaires</legend>
         <div className="grid gap-2 sm:grid-cols-2">
-          <label className="flex items-center gap-2 text-sm"><Checkbox name="interpretationNeeded" defaultChecked={defaults.interpretationNeeded} /> Interprétation humaine nécessaire</label>
-          <label className="flex items-center gap-2 text-sm"><Checkbox name="ocrNeeded" defaultChecked={defaults.ocrNeeded} /> OCR (PDF / scans)</label>
-          <label className="flex items-center gap-2 text-sm"><Checkbox name="nlpNeeded" defaultChecked={defaults.nlpNeeded} /> NLP (compréhension texte)</label>
-          <label className="flex items-center gap-2 text-sm"><Checkbox name="ragNeeded" defaultChecked={defaults.ragNeeded} /> RAG (recherche augmentée)</label>
+          <label className="flex items-center gap-2 text-sm"><Checkbox name="interpretationNeeded" defaultChecked={defaults.interpretationNeeded} /> <CB label="Interprétation humaine nécessaire" name="interpretationNeeded" /></label>
+          <label className="flex items-center gap-2 text-sm"><Checkbox name="ocrNeeded" defaultChecked={defaults.ocrNeeded} /> <CB label="OCR (PDF / scans)" name="ocrNeeded" /></label>
+          <label className="flex items-center gap-2 text-sm"><Checkbox name="nlpNeeded" defaultChecked={defaults.nlpNeeded} /> <CB label="NLP (compréhension texte)" name="nlpNeeded" /></label>
+          <label className="flex items-center gap-2 text-sm"><Checkbox name="ragNeeded" defaultChecked={defaults.ragNeeded} /> <CB label="RAG (recherche augmentée)" name="ragNeeded" /></label>
         </div>
       </fieldset>
 

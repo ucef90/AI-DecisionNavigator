@@ -7,7 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { TextareaField } from "@/components/atelier1/editors/form-fields";
 import { ScoreInput } from "@/components/scoring/score-input";
+import { HelpHint } from "@/components/ui/help-hint";
+import { getHint } from "@/lib/field-hints";
 import type { ScoreValue } from "@/types/score-levels";
+
+function FLabel({ label, name }: { label: string; name: string }) {
+  const h = getHint(name);
+  return (
+    <label className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+      <span>{label}</span>
+      {h ? <HelpHint hint={h} /> : null}
+    </label>
+  );
+}
 
 export type VisionDefaults = {
   visionStatement: string;
@@ -42,22 +54,22 @@ export function VisionEditor({ defaults, action }: { defaults: VisionDefaults; a
       <TextareaField label="Valeur business attendue (chiffrée si possible)" name="businessValue" defaultValue={defaults.businessValue} rows={3} placeholder="ex. -30% délai de traitement, +20% satisfaction client" />
 
       <div className="grid gap-3 md:grid-cols-2">
-        <ScoreInput axis="businessValue" label="Score valeur business" value={bvScore} onChange={(v: ScoreValue) => setBvScore(v)} compact />
-        <ScoreInput axis="transformation" label="Score transformation" value={trScore} onChange={(v: ScoreValue) => setTrScore(v)} compact />
+        <ScoreInput axis="businessValue" name="businessValueScore" label="Score valeur business" value={bvScore} onChange={(v: ScoreValue) => setBvScore(v)} compact />
+        <ScoreInput axis="transformation" name="transformationScore" label="Score transformation" value={trScore} onChange={(v: ScoreValue) => setTrScore(v)} compact />
       </div>
 
       <div className="space-y-1">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Objectifs stratégiques (un par ligne)</label>
+        <FLabel label="Objectifs stratégiques (un par ligne)" name="strategicObjectives" />
         <Textarea name="strategicObjectives" rows={4} defaultValue={defaults.strategicObjectivesText} placeholder={"Réduire le délai moyen de réponse à 24h\nIndustrialiser le traitement de 80% des emails"} />
       </div>
 
       <div className="space-y-1">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Objectifs de transformation (un par ligne)</label>
+        <FLabel label="Objectifs de transformation (un par ligne)" name="transformationGoals" />
         <Textarea name="transformationGoals" rows={3} defaultValue={defaults.transformationGoalsText} placeholder={"Désiloter données métier et IA\nFormation agents au pilotage IA"} />
       </div>
 
       <div className="space-y-1">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Critères de succès SMART (un par ligne)</label>
+        <FLabel label="Critères de succès SMART (un par ligne)" name="successCriteria" />
         <Textarea name="successCriteria" rows={3} defaultValue={defaults.successCriteriaText} placeholder={"Délai moyen réponse < 24h à 6 mois\nTaux d'adoption agents > 80%"} />
       </div>
 

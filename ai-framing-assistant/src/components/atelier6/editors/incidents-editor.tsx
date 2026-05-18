@@ -4,7 +4,9 @@ import { EditableList, EditFormFooter } from "@/components/atelier1/editors/edit
 import { SelectField, TextareaField } from "@/components/atelier1/editors/form-fields";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { HelpHint } from "@/components/ui/help-hint";
 import { cn } from "@/lib/utils";
+import { getHint } from "@/lib/field-hints";
 import { INCIDENT_TYPES, INCIDENT_TYPE_LABELS, type IncidentType } from "@/types/atelier6";
 
 export type IncidentRow = { id: string; incidentType: string; severity: string; detectionMethod: string | null; escalationPath: string | null; correctiveActions: string | null; postIncidentReview: boolean };
@@ -57,7 +59,10 @@ export function IncidentsEditor({ items, onCreate, onUpdate, onDelete }: {
           <TextareaField label="Actions correctives" name="correctiveActions" defaultValue={item?.correctiveActions ?? ""} />
           <label className="flex items-center gap-2 text-xs">
             <Checkbox name="postIncidentReview" defaultChecked={item?.postIncidentReview ?? false} />
-            Post-mortem obligatoire
+            <span className="inline-flex items-center gap-1">
+              Post-mortem obligatoire
+              {getHint("postIncidentReview") ? <HelpHint hint={getHint("postIncidentReview")!} /> : null}
+            </span>
           </label>
           <EditFormFooter cancel={cancel} pending={pending} />
         </form>

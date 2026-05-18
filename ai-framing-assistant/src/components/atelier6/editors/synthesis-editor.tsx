@@ -6,6 +6,18 @@ import { Save, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { HelpHint } from "@/components/ui/help-hint";
+import { getHint } from "@/lib/field-hints";
+
+function FLabel({ label, name }: { label: string; name: string }) {
+  const h = getHint(name);
+  return (
+    <label className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+      <span>{label}</span>
+      {h ? <HelpHint hint={h} /> : null}
+    </label>
+  );
+}
 
 export type SynthesisDefaults = {
   overallStatement: string;
@@ -74,7 +86,7 @@ export function A6SynthesisEditor({
       </div>
 
       <div className="space-y-1">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Statement gouvernance (vision globale)</label>
+        <FLabel label="Statement gouvernance (vision globale)" name="overallStatement" />
         <Textarea
           rows={3}
           value={overallStatement}
@@ -89,11 +101,12 @@ export function A6SynthesisEditor({
           onCheckedChange={(c) => setIndustrialization(Boolean(c))}
         />
         Industrialisation envisageable
+        {getHint("industrializationReadiness") ? <HelpHint hint={getHint("industrializationReadiness")!} /> : null}
       </label>
 
       <div className="grid gap-3 md:grid-cols-3">
         <div className="space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Points forts (un par ligne)</label>
+          <FLabel label="Points forts (un par ligne)" name="strongPoints" />
           <Textarea
             rows={5}
             value={strong}
@@ -102,7 +115,7 @@ export function A6SynthesisEditor({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Points faibles (un par ligne)</label>
+          <FLabel label="Points faibles (un par ligne)" name="weakPoints" />
           <Textarea
             rows={5}
             value={weak}
@@ -111,7 +124,7 @@ export function A6SynthesisEditor({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Actions prioritaires (une par ligne)</label>
+          <FLabel label="Actions prioritaires (une par ligne)" name="priorityActions" />
           <Textarea
             rows={5}
             value={actions}

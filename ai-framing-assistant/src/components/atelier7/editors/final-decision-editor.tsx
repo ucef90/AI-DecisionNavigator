@@ -6,8 +6,20 @@ import { Save, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, SelectField, TextareaField } from "@/components/atelier1/editors/form-fields";
+import { HelpHint } from "@/components/ui/help-hint";
+import { getHint } from "@/lib/field-hints";
 import { DECISIONS, DECISION_LABELS, type Decision } from "@/types";
 import { SPONSOR_DECISIONS, SPONSOR_DECISION_LABELS, type SponsorDecision } from "@/types/atelier7";
+
+function FLabel({ label, name }: { label: string; name: string }) {
+  const h = getHint(name);
+  return (
+    <label className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+      <span>{label}</span>
+      {h ? <HelpHint hint={h} /> : null}
+    </label>
+  );
+}
 
 export type FinalDecisionDefaults = {
   finalDecision: Decision | "";
@@ -84,7 +96,7 @@ export function FinalDecisionEditor({
         <legend className="px-2 text-xs font-semibold uppercase tracking-wider">Décision finale</legend>
         <div className="grid gap-2 sm:grid-cols-2">
           <div className="space-y-1">
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Décision</label>
+            <FLabel label="Décision" name="finalDecision" />
             <select
               value={finalDecision}
               onChange={(e) => setFinalDecision(e.target.value as Decision | "")}
@@ -98,22 +110,22 @@ export function FinalDecisionEditor({
           </div>
         </div>
         <div className="mt-2 space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Rationnel</label>
+          <FLabel label="Rationnel" name="decisionRationale" />
           <Textarea rows={3} value={rationale} onChange={(e) => setRationale(e.target.value)} placeholder="Explique en 2-3 phrases pourquoi cette décision (score, conditions, contraintes)." />
         </div>
       </fieldset>
 
       <div className="grid gap-3 md:grid-cols-3">
         <div className="space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Points forts (un par ligne)</label>
+          <FLabel label="Points forts (un par ligne)" name="strongPoints" />
           <Textarea rows={5} value={strong} onChange={(e) => setStrong(e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Points faibles (un par ligne)</label>
+          <FLabel label="Points faibles (un par ligne)" name="weakPoints" />
           <Textarea rows={5} value={weak} onChange={(e) => setWeak(e.target.value)} />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Risques principaux (un par ligne)</label>
+          <FLabel label="Risques principaux (un par ligne)" name="mainRisks" />
           <Textarea rows={5} value={risks} onChange={(e) => setRisks(e.target.value)} />
         </div>
       </div>

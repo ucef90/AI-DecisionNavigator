@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
+import { HelpHint } from "@/components/ui/help-hint";
+import { getHint } from "@/lib/field-hints";
 import { SCORE_LEVELS, hintForAxis, type ScoreValue } from "@/types/score-levels";
 
 // Composant universel de notation 1..5 avec :
@@ -40,6 +42,10 @@ export type ScoreInputProps = {
   compact?: boolean;
   /** Le bouton "auto" qui recalcule depuis le snapshot */
   onResetToAuto?: () => void;
+  /** Bulle d'aide affichée via "(i)" à côté du label (auto-lookup par nom de champ si omis) */
+  hint?: string;
+  /** Nom du champ pour l'auto-lookup dans FIELD_HINTS */
+  name?: string;
 };
 
 export function ScoreInput({
@@ -52,7 +58,10 @@ export function ScoreInput({
   readOnly,
   compact,
   onResetToAuto,
+  hint,
+  name,
 }: ScoreInputProps) {
+  const helpText = hint ?? (name ? getHint(name) : undefined) ?? getHint(axis);
   const [hovered, setHovered] = useState<ScoreValue | null>(null);
   const focusValue = hovered ?? ((value ?? null) as ScoreValue | null);
   const showHint = focusValue != null;
@@ -76,6 +85,7 @@ export function ScoreInput({
           ) : null}
           <div className="flex items-center gap-2">
             <h4 className="text-sm font-semibold">{label}</h4>
+            {helpText ? <HelpHint hint={helpText} /> : null}
             {auto ? (
               <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
                 Auto

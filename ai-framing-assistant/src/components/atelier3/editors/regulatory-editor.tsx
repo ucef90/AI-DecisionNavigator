@@ -7,7 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { SelectField, TextareaField } from "@/components/atelier1/editors/form-fields";
+import { HelpHint } from "@/components/ui/help-hint";
+import { getHint } from "@/lib/field-hints";
 import { EU_AI_ACT_TIERS, EU_AI_ACT_TIER_LABELS } from "@/types/atelier3";
+
+function CB({ label, name }: { label: string; name: string }) {
+  const h = getHint(name);
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span>{label}</span>
+      {h ? <HelpHint hint={h} /> : null}
+    </span>
+  );
+}
 
 export type RegulatoryDefaults = {
   rgpdApplicable: boolean;
@@ -30,11 +42,11 @@ export function RegulatoryEditor({ defaults, action }: { defaults: RegulatoryDef
       <fieldset className="rounded-md border border-border bg-background p-3">
         <legend className="px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Applicabilité réglementaire</legend>
         <div className="grid gap-2 sm:grid-cols-2">
-          <label className="flex items-center gap-2 text-sm"><Checkbox name="rgpdApplicable" defaultChecked={defaults.rgpdApplicable} /> RGPD applicable</label>
-          <label className="flex items-center gap-2 text-sm"><Checkbox name="sensitiveDataConcerned" defaultChecked={defaults.sensitiveDataConcerned} /> Données sensibles concernées</label>
-          <label className="flex items-center gap-2 text-sm"><Checkbox name="auditRequired" defaultChecked={defaults.auditRequired} /> Audit requis</label>
-          <label className="flex items-center gap-2 text-sm"><Checkbox name="dpoConsulted" defaultChecked={defaults.dpoConsulted} /> ✓ DPO consulté</label>
-          <label className="flex items-center gap-2 text-sm"><Checkbox name="cnilConsultation" defaultChecked={defaults.cnilConsultation} /> Consultation CNIL</label>
+          <label className="flex items-center gap-2 text-sm"><Checkbox name="rgpdApplicable" defaultChecked={defaults.rgpdApplicable} /> <CB label="RGPD applicable" name="rgpdApplicable" /></label>
+          <label className="flex items-center gap-2 text-sm"><Checkbox name="sensitiveDataConcerned" defaultChecked={defaults.sensitiveDataConcerned} /> <CB label="Données sensibles concernées" name="sensitiveDataConcerned" /></label>
+          <label className="flex items-center gap-2 text-sm"><Checkbox name="auditRequired" defaultChecked={defaults.auditRequired} /> <CB label="Audit requis" name="auditRequired" /></label>
+          <label className="flex items-center gap-2 text-sm"><Checkbox name="dpoConsulted" defaultChecked={defaults.dpoConsulted} /> <CB label="✓ DPO consulté" name="dpoConsulted" /></label>
+          <label className="flex items-center gap-2 text-sm"><Checkbox name="cnilConsultation" defaultChecked={defaults.cnilConsultation} /> <CB label="Consultation CNIL" name="cnilConsultation" /></label>
         </div>
       </fieldset>
 
@@ -44,7 +56,10 @@ export function RegulatoryEditor({ defaults, action }: { defaults: RegulatoryDef
       </div>
 
       <div className="space-y-1">
-        <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Obligations légales (une par ligne)</label>
+        <label className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span>Obligations légales (une par ligne)</span>
+          {getHint("legalObligations") ? <HelpHint hint={getHint("legalObligations")!} /> : null}
+        </label>
         <Textarea name="legalObligations" rows={4} defaultValue={defaults.legalObligationsText} placeholder={"RGPD — Art. 5 minimisation\nRGPD — Art. 13-14 information\n..."} />
       </div>
 

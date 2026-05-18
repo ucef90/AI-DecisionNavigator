@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
-import { DataBlock } from "@/components/common/data-block";
-import { Badge } from "@/components/ui/badge";
+import { BusinessNeedEditor } from "@/components/atelier1/editors/business-need-editor";
+import { saveBusinessNeed } from "@/lib/actions/atelier1";
 import { loadAtelierSnapshot } from "@/lib/engines/atelier1";
 
 export default async function ReformulationPage(props: PageProps<"/projects/[id]/atelier/1/reformulation">) {
@@ -10,6 +10,11 @@ export default async function ReformulationPage(props: PageProps<"/projects/[id]
   const snap = await loadAtelierSnapshot(id);
   if (!snap) notFound();
   const bn = snap.businessNeed;
+
+  async function action(formData: FormData) {
+    "use server";
+    await saveBusinessNeed(id, formData);
+  }
 
   return (
     <SectionShell
@@ -32,22 +37,20 @@ export default async function ReformulationPage(props: PageProps<"/projects/[id]
         bon: "Réduire le délai de traitement des emails entrants de 18 à 5 jours et améliorer la classification (passer de 88% à 95% de routage correct).",
       }}
     >
-      <div className="space-y-4">
-        <DataBlock title="Demande initiale (textuelle)" body={bn?.initialRequest} />
-        <DataBlock title="Besoin reformulé (sans techno)" body={bn?.reformulatedNeed} />
-
-        {bn?.solutionBiasDetected ? (
-          <div className="rounded-md border border-amber-500/40 bg-amber-50/40 p-3 dark:bg-amber-950/20">
-            <Badge variant="outline" className="text-[10px]">⚠ Biais solution détecté</Badge>
-            {bn.solutionBiasNotes ? (
-              <p className="mt-1 text-xs text-amber-900 dark:text-amber-200">{bn.solutionBiasNotes}</p>
-            ) : null}
-          </div>
-        ) : null}
-
-        <DataBlock title="Résultat attendu" body={bn?.expectedOutcome} />
-        <DataBlock title="Utilisateurs concernés" body={bn?.usersImpacted} />
-      </div>
+      <BusinessNeedEditor
+        variant="reformulation"
+        defaults={{
+          initialRequest: bn?.initialRequest ?? "",
+          reformulatedNeed: bn?.reformulatedNeed ?? "",
+          expectedValue: bn?.expectedValue ?? "",
+          expectedOutcome: bn?.expectedOutcome ?? "",
+          usersImpacted: bn?.usersImpacted ?? "",
+          problemStatement: bn?.problemStatement ?? "",
+          currentImpactSummary: bn?.currentImpactSummary ?? "",
+          expectedResultSummary: bn?.expectedResultSummary ?? "",
+        }}
+        action={action}
+      />
     </SectionShell>
   );
 }

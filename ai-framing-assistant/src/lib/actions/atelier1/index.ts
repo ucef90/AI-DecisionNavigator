@@ -6,11 +6,25 @@ import { prisma } from "@/lib/prisma";
 import {
   ACTOR_CATEGORIES,
   ACTOR_INVOLVEMENTS,
+  ASSUMPTION_STATUSES,
+  ASSUMPTION_TYPES,
+  CONSTRAINT_TYPES,
+  EFFORT_LEVELS,
+  IMPACT_AXES,
+  IMPACT_DIRECTIONS,
+  IMPACT_SEVERITIES,
   IRRITANT_CATEGORIES,
   KPI_MEASURE_STATUSES,
+  OBJECTIVE_CATEGORIES,
+  OPPORTUNITY_CATEGORIES,
   PROCESS_STEP_MODES,
   PROCESS_STEP_TYPES,
+  RISK_LEVELS,
   SEVERITY_LEVELS,
+  UNCERTAINTY_SEVERITIES,
+  UNCERTAINTY_STATUSES,
+  VERBATIM_SENTIMENTS,
+  VERBATIM_SOURCES,
 } from "@/types/atelier1";
 
 // Server actions atelier 1 — CRUD pour les modèles éditables.
@@ -292,5 +306,258 @@ export async function updateKpi(projectId: string, kpiId: string, form: FormData
 
 export async function deleteKpi(projectId: string, kpiId: string): Promise<void> {
   await prisma.kpiBaseline.delete({ where: { id: kpiId } });
+  rev(projectId);
+}
+
+// =============================================================
+// OBJECTIVES
+// =============================================================
+export async function addObjective(projectId: string, form: FormData): Promise<void> {
+  const title = str(form.get("title"));
+  if (!title) return;
+  await prisma.businessObjective.create({
+    data: {
+      projectId,
+      title,
+      description: optStr(form.get("description")),
+      priority: optInt(form.get("priority")) ?? 3,
+      category: inSet(form.get("category"), OBJECTIVE_CATEGORIES, "OTHER"),
+    },
+  });
+  rev(projectId);
+}
+export async function updateObjective(projectId: string, oid: string, form: FormData): Promise<void> {
+  await prisma.businessObjective.update({
+    where: { id: oid },
+    data: {
+      title: str(form.get("title")) || undefined,
+      description: optStr(form.get("description")),
+      priority: optInt(form.get("priority")) ?? undefined,
+      category: inSet(form.get("category"), OBJECTIVE_CATEGORIES, "OTHER"),
+    },
+  });
+  rev(projectId);
+}
+export async function deleteObjective(projectId: string, oid: string): Promise<void> {
+  await prisma.businessObjective.delete({ where: { id: oid } });
+  rev(projectId);
+}
+
+// =============================================================
+// IMPACTS
+// =============================================================
+export async function addImpact(projectId: string, form: FormData): Promise<void> {
+  const description = str(form.get("description"));
+  if (!description) return;
+  await prisma.businessImpact.create({
+    data: {
+      projectId,
+      axis: inSet(form.get("axis"), IMPACT_AXES, "AGENT"),
+      description,
+      severity: inSet(form.get("severity"), IMPACT_SEVERITIES, "MEDIUM"),
+      direction: inSet(form.get("direction"), IMPACT_DIRECTIONS, "NEGATIVE"),
+      metric: optStr(form.get("metric")),
+    },
+  });
+  rev(projectId);
+}
+export async function updateImpact(projectId: string, iid: string, form: FormData): Promise<void> {
+  await prisma.businessImpact.update({
+    where: { id: iid },
+    data: {
+      axis: inSet(form.get("axis"), IMPACT_AXES, "AGENT"),
+      description: str(form.get("description")) || undefined,
+      severity: inSet(form.get("severity"), IMPACT_SEVERITIES, "MEDIUM"),
+      direction: inSet(form.get("direction"), IMPACT_DIRECTIONS, "NEGATIVE"),
+      metric: optStr(form.get("metric")),
+    },
+  });
+  rev(projectId);
+}
+export async function deleteImpact(projectId: string, iid: string): Promise<void> {
+  await prisma.businessImpact.delete({ where: { id: iid } });
+  rev(projectId);
+}
+
+// =============================================================
+// ASSUMPTIONS
+// =============================================================
+export async function addAssumption(projectId: string, form: FormData): Promise<void> {
+  const statement = str(form.get("statement"));
+  if (!statement) return;
+  await prisma.projectAssumption.create({
+    data: {
+      projectId,
+      statement,
+      assumptionType: inSet(form.get("assumptionType"), ASSUMPTION_TYPES, "BUSINESS"),
+      riskIfWrong: inSet(form.get("riskIfWrong"), RISK_LEVELS, "MEDIUM"),
+      status: inSet(form.get("status"), ASSUMPTION_STATUSES, "UNVERIFIED"),
+      validationPlan: optStr(form.get("validationPlan")),
+    },
+  });
+  rev(projectId);
+}
+export async function updateAssumption(projectId: string, aid: string, form: FormData): Promise<void> {
+  await prisma.projectAssumption.update({
+    where: { id: aid },
+    data: {
+      statement: str(form.get("statement")) || undefined,
+      assumptionType: inSet(form.get("assumptionType"), ASSUMPTION_TYPES, "BUSINESS"),
+      riskIfWrong: inSet(form.get("riskIfWrong"), RISK_LEVELS, "MEDIUM"),
+      status: inSet(form.get("status"), ASSUMPTION_STATUSES, "UNVERIFIED"),
+      validationPlan: optStr(form.get("validationPlan")),
+    },
+  });
+  rev(projectId);
+}
+export async function deleteAssumption(projectId: string, aid: string): Promise<void> {
+  await prisma.projectAssumption.delete({ where: { id: aid } });
+  rev(projectId);
+}
+
+// =============================================================
+// UNCERTAINTIES
+// =============================================================
+export async function addUncertainty(projectId: string, form: FormData): Promise<void> {
+  const topic = str(form.get("topic"));
+  const question = str(form.get("question"));
+  if (!topic || !question) return;
+  await prisma.uncertainty.create({
+    data: {
+      projectId,
+      topic,
+      question,
+      severity: inSet(form.get("severity"), UNCERTAINTY_SEVERITIES, "MEDIUM"),
+      status: inSet(form.get("status"), UNCERTAINTY_STATUSES, "OPEN"),
+      ownerToAsk: optStr(form.get("ownerToAsk")),
+      resolution: optStr(form.get("resolution")),
+    },
+  });
+  rev(projectId);
+}
+export async function updateUncertainty(projectId: string, uid: string, form: FormData): Promise<void> {
+  await prisma.uncertainty.update({
+    where: { id: uid },
+    data: {
+      topic: str(form.get("topic")) || undefined,
+      question: str(form.get("question")) || undefined,
+      severity: inSet(form.get("severity"), UNCERTAINTY_SEVERITIES, "MEDIUM"),
+      status: inSet(form.get("status"), UNCERTAINTY_STATUSES, "OPEN"),
+      ownerToAsk: optStr(form.get("ownerToAsk")),
+      resolution: optStr(form.get("resolution")),
+    },
+  });
+  rev(projectId);
+}
+export async function deleteUncertainty(projectId: string, uid: string): Promise<void> {
+  await prisma.uncertainty.delete({ where: { id: uid } });
+  rev(projectId);
+}
+
+// =============================================================
+// CONSTRAINTS
+// =============================================================
+export async function addConstraint(projectId: string, form: FormData): Promise<void> {
+  const description = str(form.get("description"));
+  if (!description) return;
+  await prisma.businessConstraint.create({
+    data: {
+      projectId,
+      constraintType: inSet(form.get("constraintType"), CONSTRAINT_TYPES, "OTHER"),
+      description,
+      impactLevel: inSet(form.get("impactLevel"), SEVERITY_LEVELS, "MEDIUM"),
+      source: optStr(form.get("source")),
+    },
+  });
+  rev(projectId);
+}
+export async function updateConstraint(projectId: string, cid: string, form: FormData): Promise<void> {
+  await prisma.businessConstraint.update({
+    where: { id: cid },
+    data: {
+      constraintType: inSet(form.get("constraintType"), CONSTRAINT_TYPES, "OTHER"),
+      description: str(form.get("description")) || undefined,
+      impactLevel: inSet(form.get("impactLevel"), SEVERITY_LEVELS, "MEDIUM"),
+      source: optStr(form.get("source")),
+    },
+  });
+  rev(projectId);
+}
+export async function deleteConstraint(projectId: string, cid: string): Promise<void> {
+  await prisma.businessConstraint.delete({ where: { id: cid } });
+  rev(projectId);
+}
+
+// =============================================================
+// OPPORTUNITIES
+// =============================================================
+export async function addOpportunity(projectId: string, form: FormData): Promise<void> {
+  const title = str(form.get("title"));
+  if (!title) return;
+  await prisma.improvementOpportunity.create({
+    data: {
+      projectId,
+      title,
+      description: optStr(form.get("description")),
+      category: inSet(form.get("category"), OPPORTUNITY_CATEGORIES, "OTHER"),
+      estimatedGain: optStr(form.get("estimatedGain")),
+      effort: inSet(form.get("effort"), EFFORT_LEVELS, "MEDIUM"),
+    },
+  });
+  rev(projectId);
+}
+export async function updateOpportunity(projectId: string, oid: string, form: FormData): Promise<void> {
+  await prisma.improvementOpportunity.update({
+    where: { id: oid },
+    data: {
+      title: str(form.get("title")) || undefined,
+      description: optStr(form.get("description")),
+      category: inSet(form.get("category"), OPPORTUNITY_CATEGORIES, "OTHER"),
+      estimatedGain: optStr(form.get("estimatedGain")),
+      effort: inSet(form.get("effort"), EFFORT_LEVELS, "MEDIUM"),
+    },
+  });
+  rev(projectId);
+}
+export async function deleteOpportunity(projectId: string, oid: string): Promise<void> {
+  await prisma.improvementOpportunity.delete({ where: { id: oid } });
+  rev(projectId);
+}
+
+// =============================================================
+// VERBATIMS
+// =============================================================
+export async function addVerbatim(projectId: string, form: FormData): Promise<void> {
+  const quote = str(form.get("quote"));
+  if (!quote) return;
+  await prisma.userVerbatim.create({
+    data: {
+      projectId,
+      quote,
+      speakerRole: optStr(form.get("speakerRole")),
+      speakerName: optStr(form.get("speakerName")),
+      source: inSet(form.get("source"), VERBATIM_SOURCES, "INTERVIEW"),
+      sentiment: inSet(form.get("sentiment"), VERBATIM_SENTIMENTS, "NEGATIVE"),
+      theme: optStr(form.get("theme")),
+    },
+  });
+  rev(projectId);
+}
+export async function updateVerbatim(projectId: string, vid: string, form: FormData): Promise<void> {
+  await prisma.userVerbatim.update({
+    where: { id: vid },
+    data: {
+      quote: str(form.get("quote")) || undefined,
+      speakerRole: optStr(form.get("speakerRole")),
+      speakerName: optStr(form.get("speakerName")),
+      source: inSet(form.get("source"), VERBATIM_SOURCES, "INTERVIEW"),
+      sentiment: inSet(form.get("sentiment"), VERBATIM_SENTIMENTS, "NEGATIVE"),
+      theme: optStr(form.get("theme")),
+    },
+  });
+  rev(projectId);
+}
+export async function deleteVerbatim(projectId: string, vid: string): Promise<void> {
+  await prisma.userVerbatim.delete({ where: { id: vid } });
   rev(projectId);
 }

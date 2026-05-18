@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
-import { DataBlock } from "@/components/common/data-block";
+import { BusinessNeedEditor } from "@/components/atelier1/editors/business-need-editor";
+import { saveBusinessNeed } from "@/lib/actions/atelier1";
 import { loadAtelierSnapshot } from "@/lib/engines/atelier1";
 
 export default async function ValuePage(props: PageProps<"/projects/[id]/atelier/1/value">) {
@@ -9,6 +10,11 @@ export default async function ValuePage(props: PageProps<"/projects/[id]/atelier
   const snap = await loadAtelierSnapshot(id);
   if (!snap) notFound();
   const bn = snap.businessNeed;
+
+  async function action(formData: FormData) {
+    "use server";
+    await saveBusinessNeed(id, formData);
+  }
 
   return (
     <SectionShell
@@ -24,15 +30,22 @@ export default async function ValuePage(props: PageProps<"/projects/[id]/atelier
       cherche={[
         "Une description sur plusieurs axes (ops, qualité, expérience, pilotage).",
         "Chiffrage si possible (ROI, ETP libéré, NPS visé).",
-        "Cohérence avec les objectifs et KPI cibles.",
       ]}
     >
-      <div className="space-y-3">
-        <DataBlock title="Valeur métier attendue" body={bn?.expectedValue} />
-        <DataBlock title="Résultat attendu (chiffré)" body={bn?.expectedOutcome} />
-        <DataBlock title="Énoncé du problème métier (synthèse)" body={bn?.problemStatement} />
-        <DataBlock title="Résumé de la valeur attendue" body={bn?.expectedResultSummary} />
-      </div>
+      <BusinessNeedEditor
+        variant="value"
+        defaults={{
+          initialRequest: bn?.initialRequest ?? "",
+          reformulatedNeed: bn?.reformulatedNeed ?? "",
+          expectedValue: bn?.expectedValue ?? "",
+          expectedOutcome: bn?.expectedOutcome ?? "",
+          usersImpacted: bn?.usersImpacted ?? "",
+          problemStatement: bn?.problemStatement ?? "",
+          currentImpactSummary: bn?.currentImpactSummary ?? "",
+          expectedResultSummary: bn?.expectedResultSummary ?? "",
+        }}
+        action={action}
+      />
     </SectionShell>
   );
 }

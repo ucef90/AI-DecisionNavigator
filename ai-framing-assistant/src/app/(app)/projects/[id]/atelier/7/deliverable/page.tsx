@@ -3,19 +3,36 @@ import { notFound } from "next/navigation";
 import { SectionShell } from "@/components/atelier1/section-shell";
 import { DeliverableViewer } from "@/components/atelier7/deliverable-viewer";
 import { generateGlobalDossier } from "@/lib/deliverables/global-dossier";
+import { buildVisualReportData } from "@/lib/deliverables/visual-report-data";
+import { loadAtelier5Snapshot } from "@/lib/engines/atelier5";
 import { loadAtelier7Snapshot } from "@/lib/engines/atelier7";
 
-// Génération du livrable global : consolidation markdown des 7 ateliers.
-// Côté serveur on construit le markdown en lisant tout, côté client on
-// affiche aperçu + bouton de téléchargement.
+// Génération du livrable global. Côté serveur on construit :
+//   - le markdown consolidé (text complet)
+//   - les données plates du rapport visuel (cover + 7 ateliers + visualisations)
+// Côté client le DeliverableViewer affiche la version markdown à l'écran et
+// le rapport visuel UNIQUEMENT à l'impression — pour le PDF unique.
 export default async function DeliverableSectionPage(
   props: PageProps<"/projects/[id]/atelier/7/deliverable">,
 ) {
   const { id } = await props.params;
-  const snap = await loadAtelier7Snapshot(id);
+  const [snap, a5] = await Promise.all([
+    loadAtelier7Snapshot(id),
+    loadAtelier5Snapshot(id),
+  ]);
   if (!snap) notFound();
 
   const markdown = generateGlobalDossier(snap);
+
+  const a5Extra = a5
+    ? {
+        annotations: a5.annotations.length,
+        criticalNodes: safeArr<string>(a5.synthesis?.criticalNodes),
+        missingComponents: safeArr<string>(a5.synthesis?.missingComponents),
+        systemOverview: a5.synthesis?.systemOverview ?? null,
+      }
+    : undefined;
+  const visualData = buildVisualReportData(snap, a5Extra);
 
   return (
     <SectionShell
@@ -38,7 +55,21 @@ export default async function DeliverableSectionPage(
         "Ne pas relire avant envoi : le moteur agrège, c'est à toi de challenger le contenu.",
       ]}
     >
-      <DeliverableViewer markdown={markdown} projectName={snap.projectName} />
+      <DeliverableViewer
+        markdown={markdown}
+        projectName={snap.projectName}
+        visualData={visualData}
+      />
     </SectionShell>
   );
+}
+
+function safeArr<T>(s: string | null | undefined): T[] {
+  if (!s) return [];
+  try {
+    const v = JSON.parse(s);
+    return Array.isArray(v) ? (v as T[]) : [];
+  } catch {
+    return [];
+  }
 }

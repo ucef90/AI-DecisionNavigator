@@ -4,13 +4,16 @@ import { useEffect, useState } from "react";
 import { Copy, Download, Eye, FileDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { VisualReport } from "@/components/atelier7/visual-report";
+import type { VisualReportData } from "@/lib/deliverables/visual-report-data";
 
 type Props = {
   markdown: string;
   projectName: string;
+  visualData: VisualReportData;
 };
 
-export function DeliverableViewer({ markdown, projectName }: Props) {
+export function DeliverableViewer({ markdown, projectName, visualData }: Props) {
   const [view, setView] = useState<"preview" | "raw">("preview");
   const [copied, setCopied] = useState(false);
 
@@ -111,13 +114,21 @@ export function DeliverableViewer({ markdown, projectName }: Props) {
         </div>
       </div>
 
-      {view === "preview" ? (
-        <PreviewMarkdown content={markdown} projectName={projectName} />
-      ) : (
-        <pre className="print:hidden overflow-x-auto rounded-md border border-border bg-muted/30 p-4 text-xs leading-relaxed">
-          <code>{markdown}</code>
-        </pre>
-      )}
+      {/* Aperçu écran — masqué à l'impression, remplacé par le rapport visuel */}
+      <div className="print:hidden">
+        {view === "preview" ? (
+          <PreviewMarkdown content={markdown} projectName={projectName} />
+        ) : (
+          <pre className="overflow-x-auto rounded-md border border-border bg-muted/30 p-4 text-xs leading-relaxed">
+            <code>{markdown}</code>
+          </pre>
+        )}
+      </div>
+
+      {/* Rapport visuel imprimable — invisible à l'écran, seul rendu à l'impression */}
+      <div className="hidden print:block">
+        <VisualReport data={visualData} />
+      </div>
     </div>
   );
 }

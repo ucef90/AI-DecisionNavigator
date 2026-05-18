@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   LayoutDashboard,
   FolderKanban,
   PlusCircle,
@@ -19,5 +20,6 @@ export const mainNav: NavItem[] = [
 ];
 
 export const secondaryNav: NavItem[] = [
+  { label: "Manuel", href: "/help", icon: BookOpen },
   { label: "Paramètres", href: "/settings", icon: Settings },
 ];

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { TextareaField } from "@/components/atelier1/editors/form-fields";
 import { ScoreInput } from "@/components/scoring/score-input";
+import { ScoreScaleInfo } from "@/components/help/score-scale-info";
 import { HelpHint } from "@/components/ui/help-hint";
 import { getHint } from "@/lib/field-hints";
 import type { ScoreValue } from "@/types/score-levels";
@@ -53,6 +54,13 @@ export function VisionEditor({ defaults, action }: { defaults: VisionDefaults; a
       <TextareaField label="Énoncé de vision (métier, pas techno)" name="visionStatement" defaultValue={defaults.visionStatement} rows={3} placeholder="ex. Faire de notre service email l'expérience de référence du secteur..." />
       <TextareaField label="Valeur business attendue (chiffrée si possible)" name="businessValue" defaultValue={defaults.businessValue} rows={3} placeholder="ex. -30% délai de traitement, +20% satisfaction client" />
 
+      <ScoreScaleInfo
+        axes={[
+          { axisKey: "businessValue", label: "Valeur business" },
+          { axisKey: "transformation", label: "Transformation" },
+        ]}
+        title="Comment scorer Valeur business (1-5) et Transformation (1-5) ?"
+      />
       <div className="grid gap-3 md:grid-cols-2">
         <ScoreInput axis="businessValue" name="businessValueScore" label="Score valeur business" value={bvScore} onChange={(v: ScoreValue) => setBvScore(v)} compact />
         <ScoreInput axis="transformation" name="transformationScore" label="Score transformation" value={trScore} onChange={(v: ScoreValue) => setTrScore(v)} compact />

@@ -271,6 +271,47 @@ export const SCORE_LEVEL_HINTS: Record<string, ScoreLevelHints> = {
     4: "Gouvernance complexe, multi-niveaux.",
     5: "Gouvernance très exigeante (régulation, audit, RGPD).",
   },
+
+  // ----- Atelier 7 — Vision (business / transformation) -----
+  businessValue: {
+    1: "Aucune valeur business identifiée, projet exploratoire.",
+    2: "Valeur business floue, gain potentiel non chiffré.",
+    3: "Valeur business identifiée, gain estimé approximatif.",
+    4: "Valeur business chiffrée (ROI, KPI), vitrine sectorielle.",
+    5: "Valeur business critique, ROI majeur, transformation stratégique.",
+  },
+  transformation: {
+    1: "Pas de transformation organisationnelle, projet outil isolé.",
+    2: "Transformation locale, 1 équipe / 1 process impactés.",
+    3: "Transformation transversale sur plusieurs équipes.",
+    4: "Transformation business model, montée en compétence majeure.",
+    5: "Transformation systémique (gouvernance, organisation, métier, SI).",
+  },
+
+  // ----- Atelier 7 — Roadmap (impact / complexité) -----
+  roadmapImpact: {
+    1: "Très faible — gain marginal sur 1 cas d'usage isolé.",
+    2: "Faible — amélioration ponctuelle, valeur limitée.",
+    3: "Moyen — gain perceptible métier ou utilisateurs.",
+    4: "Élevé — gain majeur sur KPI cibles ou expérience.",
+    5: "Critique — transformation visible, ROI fort, vitrine.",
+  },
+  roadmapComplexity: {
+    1: "Simple — outils existants, périmètre étroit, peu de dépendances.",
+    2: "Faible — quelques adaptations, dépendances connues.",
+    3: "Moyenne — efforts pluri-disciplinaires, intégrations standards.",
+    4: "Élevée — nombreuses dépendances, change management important.",
+    5: "Très complexe — refonte, multiples intégrations, risques techniques.",
+  },
+
+  // ----- Atelier 7 — Industrialisation (readiness) -----
+  industrializationReadiness: {
+    1: "Inexistant — POC pas démarré, aucune brique en place.",
+    2: "Embryonnaire — POC en cours, validation incomplète.",
+    3: "Émergent — POC validé, MVP en construction.",
+    4: "Maîtrisé — pilote stable, KPI suivis, gouvernance en place.",
+    5: "Optimisé — run continu, amélioration mesurée, industrialisé.",
+  },
 };
 
 // Helper : retourne le hint contextuel, sinon le générique.

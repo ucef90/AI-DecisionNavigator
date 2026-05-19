@@ -2,8 +2,10 @@
 
 import { EditableList, EditFormFooter } from "@/components/atelier1/editors/editable-list";
 import { Field, SelectField, TextareaField } from "@/components/atelier1/editors/form-fields";
+import { ScoreScaleInfo } from "@/components/help/score-scale-info";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { SCORE_LEVELS, type ScoreValue } from "@/types/score-levels";
 import {
   ROADMAP_ITEM_TYPES,
   ROADMAP_ITEM_TYPE_LABELS,
@@ -14,6 +16,13 @@ import {
   type RoadmapItemType,
   type RoadmapPhase,
 } from "@/types/atelier7";
+
+// Options 1..5 enrichies avec le label de niveau (Inexistant, Embryonnaire…)
+// pour rendre lisible le sens du score directement dans le dropdown.
+const SCORE_OPTIONS = ([1, 2, 3, 4, 5] as ScoreValue[]).map((n) => ({
+  value: String(n),
+  label: `${n} — ${SCORE_LEVELS[n].label}`,
+}));
 
 export type RoadmapRow = {
   id: string;
@@ -42,7 +51,15 @@ export function RoadmapEditor({ items, onCreate, onUpdate, onDelete }: {
   onDelete: (id: string) => Promise<void>;
 }) {
   return (
-    <EditableList<RoadmapRow>
+    <>
+      <ScoreScaleInfo
+        axes={[
+          { axisKey: "roadmapImpact", label: "Impact" },
+          { axisKey: "roadmapComplexity", label: "Complexité" },
+        ]}
+        title="Comment remplir Impact (1-5) et Complexité (1-5) ?"
+      />
+      <EditableList<RoadmapRow>
       items={items}
       emptyMessage="Roadmap vide. Ajoute des items par phase POC → MVP → Pilote → Rollout → Run."
       addLabel="Ajouter un item roadmap"
@@ -78,8 +95,8 @@ export function RoadmapEditor({ items, onCreate, onUpdate, onDelete }: {
             <SelectField label="Type" name="itemType" defaultValue={item?.itemType ?? "STRATEGIC"} options={ROADMAP_ITEM_TYPES.map((t) => ({ value: t, label: ROADMAP_ITEM_TYPE_LABELS[t] }))} />
           </div>
           <div className="grid gap-2 sm:grid-cols-4">
-            <SelectField label="Impact (1-5)" name="impact" defaultValue={String(item?.impact ?? 3)} options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))} />
-            <SelectField label="Complexité (1-5)" name="complexity" defaultValue={String(item?.complexity ?? 3)} options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))} />
+            <SelectField label="Impact (1-5)" name="impact" defaultValue={String(item?.impact ?? 3)} options={SCORE_OPTIONS} hint="Voir le panneau d'aide en haut. 5 = transformation visible, ROI fort, vitrine. 1 = gain marginal." />
+            <SelectField label="Complexité (1-5)" name="complexity" defaultValue={String(item?.complexity ?? 3)} options={SCORE_OPTIONS} hint="5 = refonte avec multiples intégrations et risques. 1 = périmètre simple, peu de dépendances." />
             <Field label="Effort (mois)" name="effortMonths" type="number" min={0} max={60} defaultValue={item?.effortMonths != null ? String(item.effortMonths) : ""} />
             <SelectField label="Statut" name="status" defaultValue={item?.status ?? "PLANNED"} options={ROADMAP_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] ?? s }))} />
           </div>
@@ -88,5 +105,6 @@ export function RoadmapEditor({ items, onCreate, onUpdate, onDelete }: {
         </form>
       )}
     />
+    </>
   );
 }

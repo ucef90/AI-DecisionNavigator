@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
 import { ScoreAxesEditor } from "@/components/atelier3/editors/score-axes-editor";
+import { ScoreScaleInfo } from "@/components/help/score-scale-info";
 import { saveMaturityAssessment } from "@/lib/actions/atelier3";
 import { loadAtelier3Snapshot, deriveMaturity } from "@/lib/engines/atelier3";
 
@@ -35,6 +36,11 @@ export default async function A3MaturityPage(props: PageProps<"/projects/[id]/at
       pourquoi={["Auto-éval seule = subjective. Moteur seul = aveugle au contexte.", "L'écart auto/dérivé révèle les angles morts."]}
       cherche={["Tous les axes auto-évalués (1-5).", "Notes d'auto-évaluation expliquées."]}
     >
+      <ScoreScaleInfo
+        axes={AXES.map((a) => ({ axisKey: a.axisKey, label: a.label }))}
+        title="Comment évaluer chaque axe de maturité (1-5) ?"
+      />
+
       <div className="mb-4 rounded-md border border-foreground/15 bg-muted/30 p-3 text-xs">
         <strong>Maturité dérivée par le moteur :</strong> {derived.overall}
         <span className="ml-2 text-muted-foreground">

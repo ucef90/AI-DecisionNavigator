@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { SectionShell } from "@/components/atelier1/section-shell";
 import { ScoreAxesEditor } from "@/components/atelier3/editors/score-axes-editor";
+import { ScoreScaleInfo } from "@/components/help/score-scale-info";
 import { safeJSON } from "@/components/common/data-block";
 import { SelectField } from "@/components/atelier1/editors/form-fields";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +38,10 @@ export default async function A3FeasibilityPage(props: PageProps<"/projects/[id]
       pourquoi={["Le maillon faible détermine la faisabilité globale.", "Atelier 4 (axe faisabilité) consomme directement ces scores."]}
       cherche={["Tous les axes scorés (1-5).", "Bloquants/leviers explicites.", "Verdict global cohérent."]}
     >
+      <ScoreScaleInfo
+        axes={AXES.map((a) => ({ axisKey: a.axisKey, label: a.label }))}
+        title="Comment scorer chaque axe de faisabilité (1-5) ?"
+      />
       <ScoreAxesEditor
         axes={AXES}
         defaults={{

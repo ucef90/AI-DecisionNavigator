@@ -2,14 +2,21 @@
 
 import { EditableList, EditFormFooter } from "@/components/atelier1/editors/editable-list";
 import { Field, SelectField, TextareaField } from "@/components/atelier1/editors/form-fields";
+import { ScoreScaleInfo } from "@/components/help/score-scale-info";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { SCORE_LEVELS, type ScoreValue } from "@/types/score-levels";
 import {
   INDUSTRIALIZATION_STAGES,
   INDUSTRIALIZATION_STAGE_LABELS,
   INDUSTRIALIZATION_STATUSES,
   type IndustrializationStatus,
 } from "@/types/atelier7";
+
+const READINESS_OPTIONS = ([1, 2, 3, 4, 5] as ScoreValue[]).map((n) => ({
+  value: String(n),
+  label: `${n} — ${SCORE_LEVELS[n].label}`,
+}));
 
 export type IndustrializationRow = {
   id: string;
@@ -48,7 +55,12 @@ export function IndustrializationEditor({ items, onCreate, onUpdate, onDelete }:
   onDelete: (id: string) => Promise<void>;
 }) {
   return (
-    <EditableList<IndustrializationRow>
+    <>
+      <ScoreScaleInfo
+        axes={[{ axisKey: "industrializationReadiness", label: "Readiness" }]}
+        title="Comment évaluer le niveau de Readiness (1-5) ?"
+      />
+      <EditableList<IndustrializationRow>
       items={items}
       emptyMessage="Aucun stage industrialisation planifié. Définis POC → MVP → Pilote → Rollout → Run."
       addLabel="Ajouter un stage"
@@ -83,7 +95,7 @@ export function IndustrializationEditor({ items, onCreate, onUpdate, onDelete }:
           <Field label="Nom *" name="name" defaultValue={item?.name ?? ""} required placeholder="ex. POC sur cas d'usage X" />
           <div className="grid gap-2 sm:grid-cols-3">
             <SelectField label="Stage" name="stage" defaultValue={item?.stage ?? "POC"} options={INDUSTRIALIZATION_STAGES.map((st) => ({ value: st, label: INDUSTRIALIZATION_STAGE_LABELS[st] }))} />
-            <SelectField label="Readiness (1-5)" name="readinessLevel" defaultValue={String(item?.readinessLevel ?? 1)} options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))} />
+            <SelectField label="Readiness (1-5)" name="readinessLevel" defaultValue={String(item?.readinessLevel ?? 1)} options={READINESS_OPTIONS} hint="1 = pas démarré. 3 = POC validé, MVP en construction. 5 = run continu, industrialisé." />
             <SelectField label="Statut" name="status" defaultValue={item?.status ?? "NOT_STARTED"} options={INDUSTRIALIZATION_STATUSES.map((st) => ({ value: st, label: STATUS_LABEL[st] ?? st }))} />
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
@@ -96,5 +108,6 @@ export function IndustrializationEditor({ items, onCreate, onUpdate, onDelete }:
         </form>
       )}
     />
+    </>
   );
 }

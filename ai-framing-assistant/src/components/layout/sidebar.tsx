@@ -71,8 +71,8 @@ export function Sidebar() {
 
       <aside
         className={cn(
-          "print:hidden hidden md:flex shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-[width] duration-200 overflow-hidden",
-          collapsed ? "w-0 border-r-0" : "w-72",
+          "print:hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar w-72",
+          collapsed ? "hidden" : "hidden md:flex",
         )}
       >
         <div className="flex h-20 items-center gap-3 border-b border-sidebar-border px-6">
